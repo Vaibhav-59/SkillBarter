@@ -34,7 +34,7 @@ requiredEnv.forEach((key) => {
 connectDB();
 
 const allowedOrigins = [
-  "https://skill-barter-omega.vercel.app",
+  "https://luminous-starship-6a2a75.netlify.app",
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175",

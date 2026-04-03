@@ -10,27 +10,27 @@ const ErrorResponse = require("../utils/errorResponse");
 
 const validatePassword = (password) => {
   if (!password) return "Password is required";
-  
+
   if (password.length < 8) {
     return "Password must be at least 8 characters long";
   }
-  
+
   if (!/^[A-Z]/.test(password)) {
     return "First character must be uppercase";
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     return "Password must contain at least one uppercase letter";
   }
-  
+
   if (!/[0-9]/.test(password)) {
     return "Password must contain at least one number";
   }
-  
+
   if (!/[@$!%*?&]/.test(password)) {
     return "Password must contain at least one symbol (@$!%*?&)";
   }
-  
+
   return "";
 };
 
@@ -146,7 +146,7 @@ exports.login = async (req, res, next) => {
       user.refreshTokens = [];
     }
     user.refreshTokens.push(refreshToken);
-    
+
     user.lastLogin = new Date();
     user.reminderSent = false;
     user.deletionNotificationSent = false;
@@ -332,7 +332,7 @@ exports.verifyLoginOtp = async (req, res, next) => {
       user.refreshTokens = [];
     }
     user.refreshTokens.push(refreshToken);
-    
+
     await user.save({ validateBeforeSave: false });
 
     res.json({
@@ -359,12 +359,12 @@ exports.logout = async (req, res, next) => {
 
     if (user) {
       user.lastLogoutDate = new Date();
-      
+
       const refreshToken = req.body.refreshToken;
       if (refreshToken && user.refreshTokens) {
         user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
       }
-      
+
       await user.save({ validateBeforeSave: false });
     }
 

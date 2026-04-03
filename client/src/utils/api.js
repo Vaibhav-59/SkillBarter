@@ -10,11 +10,15 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Attach token from localStorage on each request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+  const adminPass = sessionStorage.getItem("sb_admin_auth");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (adminPass) {
+    config.headers["x-admin-password"] = adminPass;
   }
   return config;
 });
@@ -26,7 +30,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login"; // Optional: redirect on 401
+      // Do not redirect to /login if we are in the admin panel
+      if (!window.location.pathname.startsWith("/admin")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

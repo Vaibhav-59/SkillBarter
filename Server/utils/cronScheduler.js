@@ -3,6 +3,7 @@ const Session = require("../models/Session");
 const { sendSessionReminder } = require("../services/reminderService");
 const { sendContractReminders } = require("../services/contractReminderService");
 const { rotateDailyChallenge } = require("../controllers/challengeController");
+const https = require("https");
 
 const startCronJobs = (app) => {
   // Run every minute
@@ -79,6 +80,17 @@ const startCronJobs = (app) => {
     console.log("🔄 [Startup] Ensuring daily challenge is set...");
     rotateDailyChallenge();
   }, 3000);
+
+  // ── Render Keep-Alive: Ping server every 14 minutes ──
+  cron.schedule("*/14 * * * *", () => {
+    console.log("⏳ [Cron] Pinging server to keep Render instance awake...");
+    const url = process.env.BACKEND_URL || "https://skill-barter-plateform.onrender.com/";
+    https.get(url, (res) => {
+      console.log(`✅ [Keep-Alive] Ping successful, status code: ${res.statusCode}`);
+    }).on("error", (err) => {
+      console.error("❌ [Keep-Alive] Ping failed:", err.message);
+    });
+  });
 };
 
 module.exports = startCronJobs;

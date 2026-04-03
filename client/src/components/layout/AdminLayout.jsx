@@ -5,6 +5,7 @@ import { logout } from "../../redux/slices/authSlice";
 import { clearAdminData } from "../../redux/slices/adminSlice";
 import { showSuccess, showError } from "../../utils/toast";
 import { useTheme } from "../../hooks/useTheme";
+import AdminPasswordGate from "../../pages/AdminPasswordGate";
 
 /* ── Icon helpers ── */
 const Ico = ({ d: path, strokeWidth = 2 }) => (
@@ -75,13 +76,17 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(
+    () => sessionStorage.getItem("sb_admin_auth") === "Vai3538"
+  );
 
   const handleLogout = async () => {
     try {
+      sessionStorage.removeItem("sb_admin_auth");
+      setAuthenticated(false);
       dispatch(clearAdminData());
-      dispatch(logout());
-      showSuccess("Logged out successfully");
-      navigate("/");
+      showSuccess("Admin locked successfully");
+      navigate("/admin");
     } catch { showError("Failed to logout"); }
     setShowLogoutModal(false);
   };
@@ -102,6 +107,10 @@ export default function AdminLayout() {
 
   const primaryLinks = allLinks.slice(0, BOTTOM_BAR_COUNT);
   const hasMore = allLinks.length > BOTTOM_BAR_COUNT;
+
+  if (!authenticated) {
+    return <AdminPasswordGate onSuccess={() => setAuthenticated(true)} />;
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${pageBg}`}>

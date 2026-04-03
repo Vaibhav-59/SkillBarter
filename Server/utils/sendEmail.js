@@ -45,7 +45,6 @@ const generateOTP = () => {
 // Generic email sender (kept for forgot-password etc.)
 const sendEmail = async ({ email, subject, message, html }) => {
   const transporter = createTransporter();
-  await transporter.verify();
 
   const fromAddress = getEmailUser();
   return transporter.sendMail({

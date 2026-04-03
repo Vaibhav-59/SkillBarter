@@ -493,7 +493,16 @@ export default function HomePage() {
             <div>
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${d ? "text-slate-300" : "text-slate-700"}`}>Company</h4>
               <div className={`space-y-2.5 text-sm ${d ? "text-slate-500" : "text-slate-500"}`}>
-                {["About Us", "Careers", "Blog", "Privacy Policy", "Terms of Service"].map(l => (
+                <Link to="/about" className={`flex items-center gap-1.5 transition-all hover:translate-x-1 ${d ? "hover:text-teal-400" : "hover:text-teal-600"}`}>
+                  <span className="text-xs opacity-50">→</span> About Us
+                </Link>
+                <Link to="/contact" className={`flex items-center gap-1.5 transition-all hover:translate-x-1 ${d ? "hover:text-teal-400" : "hover:text-teal-600"}`}>
+                  <span className="text-xs opacity-50">→</span> Contact
+                </Link>
+                <Link to="/how-it-works" className={`flex items-center gap-1.5 transition-all hover:translate-x-1 ${d ? "hover:text-teal-400" : "hover:text-teal-600"}`}>
+                  <span className="text-xs opacity-50">→</span> How It Works
+                </Link>
+                {["Privacy Policy", "Terms of Service"].map(l => (
                   <div key={l} className={`flex items-center gap-1.5 cursor-pointer transition-all hover:translate-x-1 ${d ? "hover:text-teal-400" : "hover:text-teal-600"}`}>
                     <span className="text-xs opacity-50">→</span> {l}
                   </div>

@@ -11,7 +11,7 @@
 [![Redux](https://img.shields.io/badge/Redux-Toolkit-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 [![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
 
-**SkillBarter** is a full-stack MERN platform where people trade knowledge — teach what you know, learn what you want. Powered by AI-driven smart matching, real-time communication, blockchain-inspired smart contracts, gamification, and a rich community ecosystem.
+**SkillBarter** is a full-stack MERN platform where people trade knowledge — teach what you know, learn what you want. Powered by smart matching, real-time communication, blockchain-inspired smart contracts, gamification, and a rich community ecosystem.
 
 [🚀 Quick Start](#-quick-start) · [📸 Screenshots](#-web-app-screenshots) · [🏗️ Architecture](#️-architecture--project-structure) · [📡 API Docs](#-api-endpoints) · [🤝 Contributing](#-contributing)
 

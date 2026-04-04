@@ -1,29 +1,12 @@
-const Brevo = require("@getbrevo/brevo");
+const SibApiV3Sdk = require("@getbrevo/brevo");
 
-// ──────────────────────────────────────────────
-//  Brevo (formerly Sendinblue) HTTP-based email
-//  Works in ALL deployment environments
-//  (Render, Vercel, Railway, etc.) — no SMTP ports
-// ──────────────────────────────────────────────
+// ── Brevo client setup ──────────────────────────
+const client = SibApiV3Sdk.ApiClient.instance;
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-const getBrevoClient = () => {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "Missing BREVO_API_KEY in environment variables. Add it to your .env file."
-    );
-  }
-
-  const client = Brevo.ApiClient.instance;
-  const auth = client.authentications["api-key"];
-  auth.apiKey = apiKey;
-
-  return new Brevo.TransactionalEmailsApi();
-};
-
-const FROM_EMAIL =
-  process.env.BREVO_FROM_EMAIL || "[EMAIL_ADDRESS]";
-const FROM_NAME = process.env.FROM_NAME || "SkillBarter";
+const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+const FROM_NAME  = process.env.FROM_NAME || "SkillBarter";
 
 // ──────────────────────────────────────────────
 //  Generate 6-digit OTP
@@ -37,22 +20,21 @@ const generateOTP = () => {
 //  Usage: sendEmail({ email, subject, message, html })
 // ──────────────────────────────────────────────
 const sendEmail = async ({ email, subject, message, html }) => {
-  // ── Mock mode for local/CI testing ──
+  // Mock mode for local/CI testing
   if (process.env.USE_MOCK_EMAIL === "true") {
     console.log(`[MockEmail] To: ${email} | Subject: ${subject}`);
     return { success: true, messageId: "mock-" + Date.now() };
   }
 
-  const apiInstance = getBrevoClient();
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-  const sendSmtpEmail = new Brevo.SendSmtpEmail();
-  sendSmtpEmail.sender = { email: FROM_EMAIL, name: FROM_NAME };
-  sendSmtpEmail.to = [{ email }];
-  sendSmtpEmail.subject = subject;
-  sendSmtpEmail.htmlContent = html || `<p>${message}</p>`;
-  sendSmtpEmail.textContent = message;
-
-  const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+  const result = await apiInstance.sendTransacEmail({
+    sender:      { email: FROM_EMAIL, name: FROM_NAME },
+    to:          [{ email }],
+    subject,
+    htmlContent: html || `<p>${message}</p>`,
+    textContent: message,
+  });
 
   console.log(`[Brevo] Email sent to ${email} | MessageId: ${result?.messageId}`);
   return { success: true, messageId: result?.messageId || "sent" };
@@ -63,14 +45,18 @@ const sendEmail = async ({ email, subject, message, html }) => {
 //  Usage: sendOTPEmail(email, otp, username)
 // ──────────────────────────────────────────────
 const sendOTPEmail = async (email, otp, username) => {
-  const subject = "Your SkillBarter Login OTP";
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-  const html = `<!DOCTYPE html>
+  await apiInstance.sendTransacEmail({
+    sender:      { email: FROM_EMAIL, name: FROM_NAME },
+    to:          [{ email }],
+    subject:     "Your SkillBarter Login OTP",
+    htmlContent: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillBarter Login Verification</title>
+  <title>SkillBarter OTP</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
@@ -82,12 +68,8 @@ const sendOTPEmail = async (email, otp, username) => {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">
-                SkillBarter
-              </h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
-                Secure Login Verification
-              </p>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">SkillBarter</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Secure Login Verification</p>
             </td>
           </tr>
 
@@ -112,12 +94,8 @@ const sendOTPEmail = async (email, otp, username) => {
                 </span>
               </div>
 
-              <p style="margin:0 0 6px;color:#6b7280;font-size:13px;">
-                ⏱ This OTP is valid for <strong>10 minutes</strong>.
-              </p>
-              <p style="margin:0;color:#6b7280;font-size:13px;">
-                🔒 If you didn't request this, please ignore this email. Your account remains secure.
-              </p>
+              <p style="margin:0 0 6px;color:#6b7280;font-size:13px;">⏱ This OTP is valid for <strong>10 minutes</strong>.</p>
+              <p style="margin:0;color:#6b7280;font-size:13px;">🔒 If you didn't request this, please ignore this email.</p>
             </td>
           </tr>
 
@@ -135,21 +113,14 @@ const sendOTPEmail = async (email, otp, username) => {
     </tr>
   </table>
 </body>
-</html>`;
-
-  const result = await sendEmail({
-    email,
-    subject,
-    message: `Hello ${username || "User"},\n\nYour SkillBarter login OTP is: ${otp}\n\nThis OTP is valid for 10 minutes.\n\nIf you didn't request this, please ignore this email.`,
-    html,
+</html>`,
   });
 
-  return result;
+  return { success: true };
 };
 
 // ──────────────────────────────────────────────
-//  Exports — same API surface, no controller
-//  changes needed
+//  Exports
 // ──────────────────────────────────────────────
 module.exports = {
   generateOTP,

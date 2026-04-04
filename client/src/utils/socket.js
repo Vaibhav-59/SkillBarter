@@ -12,7 +12,7 @@ class SocketService {
     }
 
     const serverUrl =
-      "https://skill-barter-kspn.vercel.app" || "http://localhost:5000";
+      "https://skillbarter-2.onrender.com" || "http://localhost:5000";
 
     this.socket = io(serverUrl, {
       auth: { token },

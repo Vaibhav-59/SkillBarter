@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Setup axios instance based on environment
-const API_URL = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
+const API_URL = "https://skillbarter-2.onrender.com/api" || "http://localhost:5000/api";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

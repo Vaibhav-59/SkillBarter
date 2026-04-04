@@ -112,7 +112,7 @@ export default function ResetPassword() {
     setLoading(true);
     setErrors({});
     try {
-      const BASE = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
+      const BASE = "https://skillbarter-2.onrender.com/api" || "http://localhost:5000/api";
       const res = await fetch(`${BASE}/auth/reset-password/${token}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: form.password }),

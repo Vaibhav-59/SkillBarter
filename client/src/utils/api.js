@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BASE_URL =
-  "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
+  "https://skillbarter-2.onrender.com/api" || "http://localhost:5000/api";
 
 export { BASE_URL };
 

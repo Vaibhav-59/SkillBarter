@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import io from "socket.io-client";
 
-const SOCKET_URL = "https://skill-barter-kspn.vercel.app" || "http://localhost:5000";
+const SOCKET_URL = "https://skillbarter-2.onrender.com" || "http://localhost:5000";
 
 export default function useSocket(token) {
   const socket = useRef(null);

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:8080/api";
+const API_URL = "https://skillbarter-2.onrender.com/api" || "http://localhost:8080/api";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

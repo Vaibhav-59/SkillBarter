@@ -1,4 +1,4 @@
-const BASE_URL = "https://skill-barter-kspn.vercel.app/api"?.replace("/api", "") || "http://localhost:5000";
+const BASE_URL = "https://skillbarter-2.onrender.com"?.replace("/api", "") || "http://localhost:5000";
 
 const COLORS = ["from-cyan-500 to-blue-600", "from-violet-500 to-purple-600", "from-emerald-500 to-teal-600",
   "from-rose-500 to-pink-600", "from-amber-500 to-orange-600"];

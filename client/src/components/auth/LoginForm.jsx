@@ -101,7 +101,7 @@ export default function LoginForm({ isDarkMode = true, onSwitchMode }) {
     setLoading(true);
     setOtp(""); setOtpError(""); setOtpInfoMessage("");
     try {
-      const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+      const BASE = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
       const res = await fetch(`${BASE}/auth/send-login-otp`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email }),
@@ -125,7 +125,7 @@ export default function LoginForm({ isDarkMode = true, onSwitchMode }) {
     if (!/^\d{6}$/.test(trimmed)) { setOtpError("Enter a valid 6-digit OTP"); return; }
     setLoading(true); setOtpError("");
     try {
-      const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+      const BASE = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
       const res = await fetch(`${BASE}/auth/verify-login-otp`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, otp: trimmed }),

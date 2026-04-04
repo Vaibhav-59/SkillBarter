@@ -46,7 +46,7 @@ export default function SkillMentor() {
     try {
       const token = localStorage.getItem('token');
       const history = messages.filter((_, idx) => idx > 0);
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const apiUrl = "https://skill-barter-kspn.vercel.app/api" || 'http://localhost:5000/api';
       const res = await fetch(`${apiUrl}/mentor/chat`, {
         method: 'POST',
         headers: {

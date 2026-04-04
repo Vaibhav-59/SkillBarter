@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Setup axios instance based on environment
-const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_URL = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

@@ -12,7 +12,7 @@ class SocketService {
     }
 
     const serverUrl =
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+      "https://skill-barter-kspn.vercel.app" || "http://localhost:5000";
 
     this.socket = io(serverUrl, {
       auth: { token },

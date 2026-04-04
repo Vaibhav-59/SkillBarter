@@ -119,7 +119,7 @@ groupSessionSchema.virtual("participantCount").get(function () {
 groupSessionSchema.pre("save", function (next) {
   if (!this.meetingLink) {
     const randomId = Math.random().toString(36).substring(2, 12);
-    this.meetingLink = `${"https://skillbarterplatform1.netlify.app" || "http://localhost:5173"}/meeting/${randomId}`;
+    this.meetingLink = `${"https://skillbarterplatform2.netlify.app" || "http://localhost:5173"}/meeting/${randomId}`;
   }
   next();
 });

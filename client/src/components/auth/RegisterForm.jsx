@@ -130,7 +130,7 @@ export default function RegisterForm({ isDarkMode = true, onSwitchMode }) {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+      const BASE = "https://skill-barter-kspn.vercel.app/api" || "http://localhost:5000/api";
       const res = await fetch(`${BASE}/auth/register`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: form.name, email: form.email, password: form.password, referralCode: refCode }),

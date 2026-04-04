@@ -1,26 +1,26 @@
-const { MailtrapClient } = require("mailtrap");
+const { Resend } = require("resend");
 
 // ──────────────────────────────────────────────
-//  Mailtrap HTTP-based email client
-//  Works in all deployment environments (Render, Vercel, Railway, etc.)
-//  No SMTP ports required – uses HTTPS / REST API
+//  Resend HTTP-based email client
+//  Works in ALL deployment environments
+//  (Render, Vercel, Railway, Netlify functions, etc.)
+//  No SMTP ports — uses HTTPS REST API
 // ──────────────────────────────────────────────
 
-const getMailtrapClient = () => {
-  const token = process.env.MAILTRAP_API_TOKEN;
-  if (!token) {
+const getResendClient = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
     throw new Error(
-      "Missing MAILTRAP_API_TOKEN in environment variables. Add it to your .env file."
+      "Missing RESEND_API_KEY in environment variables. Add it to your .env file."
     );
   }
-  return new MailtrapClient({ token });
+  return new Resend(apiKey);
 };
 
-// Default sender address – must be a verified domain on Mailtrap
-const getSender = () => ({
-  email: process.env.MAILTRAP_FROM_EMAIL || "hello@demomailtrap.co",
-  name: process.env.FROM_NAME || "SkillBarter",
-});
+// Sender — "onboarding@resend.dev" works immediately without domain verification
+const FROM_ADDRESS =
+  process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+const FROM_NAME = process.env.FROM_NAME || "SkillBarter";
 
 // ──────────────────────────────────────────────
 //  Generate 6-digit OTP
@@ -40,20 +40,23 @@ const sendEmail = async ({ email, subject, message, html }) => {
     return { success: true, messageId: "mock-" + Date.now() };
   }
 
-  const client = getMailtrapClient();
-  const sender = getSender();
+  const resend = getResendClient();
 
-  const response = await client.send({
-    from: sender,
-    to: [{ email }],
+  const { data, error } = await resend.emails.send({
+    from: `${FROM_NAME} <${FROM_ADDRESS}>`,
+    to: email,
     subject,
     text: message,
     html: html || `<p>${message}</p>`,
-    category: "Transactional",
   });
 
-  console.log(`[Mailtrap] Email sent to ${email} | Subject: ${subject}`);
-  return { success: true, messageId: response?.message_ids?.[0] || "sent" };
+  if (error) {
+    console.error("[Resend] Email error:", error);
+    throw new Error(error.message || "Failed to send email via Resend");
+  }
+
+  console.log(`[Resend] Email sent to ${email} | ID: ${data?.id}`);
+  return { success: true, messageId: data?.id || "sent" };
 };
 
 // ──────────────────────────────────────────────
@@ -142,8 +145,8 @@ const sendOTPEmail = async (email, otp, username) => {
 };
 
 // ──────────────────────────────────────────────
-//  Exports — same API surface as before so no
-//  controller changes are needed
+//  Exports — same API as before, no controller
+//  changes needed
 // ──────────────────────────────────────────────
 module.exports = {
   generateOTP,

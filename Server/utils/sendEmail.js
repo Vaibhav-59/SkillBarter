@@ -1,9 +1,9 @@
-const { ApiClient, TransactionalEmailsApi } = require("@getbrevo/brevo");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-// ── Brevo client setup (runs once at module load) ──
-const client = ApiClient.instance;
-const apiKeyAuth = client.authentications["api-key"];
-apiKeyAuth.apiKey = process.env.BREVO_API_KEY;
+// ── Brevo (sib-api-v3-sdk) client setup ────────
+const client = SibApiV3Sdk.ApiClient.instance;
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
 const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
 const FROM_NAME  = process.env.FROM_NAME || "SkillBarter";
@@ -26,18 +26,15 @@ const sendEmail = async ({ email, subject, message, html }) => {
     return { success: true, messageId: "mock-" + Date.now() };
   }
 
-  const apiInstance = new TransactionalEmailsApi();
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-  const result = await apiInstance.sendTransacEmail({
+  return await apiInstance.sendTransacEmail({
     sender:      { email: FROM_EMAIL, name: FROM_NAME },
     to:          [{ email }],
     subject,
     htmlContent: html || `<p>${message}</p>`,
     textContent: message,
   });
-
-  console.log(`[Brevo] Email sent to ${email} | MessageId: ${result?.messageId}`);
-  return { success: true, messageId: result?.messageId || "sent" };
 };
 
 // ──────────────────────────────────────────────
@@ -45,9 +42,9 @@ const sendEmail = async ({ email, subject, message, html }) => {
 //  Usage: sendOTPEmail(email, otp, username)
 // ──────────────────────────────────────────────
 const sendOTPEmail = async (email, otp, username) => {
-  const apiInstance = new TransactionalEmailsApi();
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-  await apiInstance.sendTransacEmail({
+  return await apiInstance.sendTransacEmail({
     sender:      { email: FROM_EMAIL, name: FROM_NAME },
     to:          [{ email }],
     subject:     "Your SkillBarter Login OTP",
@@ -115,8 +112,6 @@ const sendOTPEmail = async (email, otp, username) => {
 </body>
 </html>`,
   });
-
-  return { success: true };
 };
 
 // ──────────────────────────────────────────────

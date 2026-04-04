@@ -1,7 +1,8 @@
+
 const nodemailer = require("nodemailer");
 
-const getEmailUser = () => process.env.EMAIL_USER || process.env.SMTP_EMAIL;
-const getEmailPass = () => process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
+const getEmailUser = () => process.env.SMTP_EMAIL;
+const getEmailPass = () => process.env.SMTP_PASSWORD;
 
 // Create transporter using Gmail or mock for testing
 const createTransporter = () => {

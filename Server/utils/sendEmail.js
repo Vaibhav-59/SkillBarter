@@ -1,9 +1,9 @@
-const SibApiV3Sdk = require("@getbrevo/brevo");
+const { ApiClient, TransactionalEmailsApi } = require("@getbrevo/brevo");
 
-// ── Brevo client setup ──────────────────────────
-const client = SibApiV3Sdk.ApiClient.instance;
-const apiKey = client.authentications["api-key"];
-apiKey.apiKey = process.env.BREVO_API_KEY;
+// ── Brevo client setup (runs once at module load) ──
+const client = ApiClient.instance;
+const apiKeyAuth = client.authentications["api-key"];
+apiKeyAuth.apiKey = process.env.BREVO_API_KEY;
 
 const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
 const FROM_NAME  = process.env.FROM_NAME || "SkillBarter";
@@ -26,7 +26,7 @@ const sendEmail = async ({ email, subject, message, html }) => {
     return { success: true, messageId: "mock-" + Date.now() };
   }
 
-  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  const apiInstance = new TransactionalEmailsApi();
 
   const result = await apiInstance.sendTransacEmail({
     sender:      { email: FROM_EMAIL, name: FROM_NAME },
@@ -45,7 +45,7 @@ const sendEmail = async ({ email, subject, message, html }) => {
 //  Usage: sendOTPEmail(email, otp, username)
 // ──────────────────────────────────────────────
 const sendOTPEmail = async (email, otp, username) => {
-  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  const apiInstance = new TransactionalEmailsApi();
 
   await apiInstance.sendTransacEmail({
     sender:      { email: FROM_EMAIL, name: FROM_NAME },

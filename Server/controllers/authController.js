@@ -181,7 +181,7 @@ exports.forgotPassword = async (req, res, next) => {
     user.resetTokenExpire = Date.now() + 10 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${"https://skillbarterplatform2.netlify.app"}/reset-password/${resetToken}`;
+    const resetUrl = `${"https://skillbarter1.netlify.app"}/reset-password/${resetToken}`;
     const message = `Reset your password here: ${resetUrl}`;
 
     try {

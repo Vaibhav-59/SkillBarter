@@ -25,7 +25,7 @@ exports.getReferralLink = asyncHandler(async (req, res, next) => {
   }
 
   // The link generated using the frontend domain
-  const referralLink = `${"https://skillbarterplatform2.netlify.app"}/register?ref=${user.referralCode}`;
+  const referralLink = `${"https://skillbarter1.netlify.app"}/register?ref=${user.referralCode}`;
 
   res.status(200).json({
     success: true,

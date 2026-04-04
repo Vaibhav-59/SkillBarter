@@ -1,25 +1,28 @@
-const { Resend } = require("resend");
+const Brevo = require("@getbrevo/brevo");
 
 // ──────────────────────────────────────────────
-//  Resend HTTP-based email client
+//  Brevo (formerly Sendinblue) HTTP-based email
 //  Works in ALL deployment environments
-//  (Render, Vercel, Railway, Netlify functions, etc.)
-//  No SMTP ports — uses HTTPS REST API
+//  (Render, Vercel, Railway, etc.) — no SMTP ports
 // ──────────────────────────────────────────────
 
-const getResendClient = () => {
-  const apiKey = process.env.RESEND_API_KEY;
+const getBrevoClient = () => {
+  const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "Missing RESEND_API_KEY in environment variables. Add it to your .env file."
+      "Missing BREVO_API_KEY in environment variables. Add it to your .env file."
     );
   }
-  return new Resend(apiKey);
+
+  const client = Brevo.ApiClient.instance;
+  const auth = client.authentications["api-key"];
+  auth.apiKey = apiKey;
+
+  return new Brevo.TransactionalEmailsApi();
 };
 
-// Sender — "onboarding@resend.dev" works immediately without domain verification
-const FROM_ADDRESS =
-  process.env.RESEND_FROM_EMAIL || "[EMAIL_ADDRESS]";
+const FROM_EMAIL =
+  process.env.BREVO_FROM_EMAIL || "[EMAIL_ADDRESS]";
 const FROM_NAME = process.env.FROM_NAME || "SkillBarter";
 
 // ──────────────────────────────────────────────
@@ -40,23 +43,19 @@ const sendEmail = async ({ email, subject, message, html }) => {
     return { success: true, messageId: "mock-" + Date.now() };
   }
 
-  const resend = getResendClient();
+  const apiInstance = getBrevoClient();
 
-  const { data, error } = await resend.emails.send({
-    from: `${FROM_NAME} <${FROM_ADDRESS}>`,
-    to: email,
-    subject,
-    text: message,
-    html: html || `<p>${message}</p>`,
-  });
+  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+  sendSmtpEmail.sender = { email: FROM_EMAIL, name: FROM_NAME };
+  sendSmtpEmail.to = [{ email }];
+  sendSmtpEmail.subject = subject;
+  sendSmtpEmail.htmlContent = html || `<p>${message}</p>`;
+  sendSmtpEmail.textContent = message;
 
-  if (error) {
-    console.error("[Resend] Email error:", error);
-    throw new Error(error.message || "Failed to send email via Resend");
-  }
+  const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
-  console.log(`[Resend] Email sent to ${email} | ID: ${data?.id}`);
-  return { success: true, messageId: data?.id || "sent" };
+  console.log(`[Brevo] Email sent to ${email} | MessageId: ${result?.messageId}`);
+  return { success: true, messageId: result?.messageId || "sent" };
 };
 
 // ──────────────────────────────────────────────
@@ -79,6 +78,7 @@ const sendOTPEmail = async (email, otp, username) => {
       <td align="center">
         <table width="520" cellpadding="0" cellspacing="0"
           style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);padding:32px 40px;text-align:center;">
@@ -90,6 +90,7 @@ const sendOTPEmail = async (email, otp, username) => {
               </p>
             </td>
           </tr>
+
           <!-- Body -->
           <tr>
             <td style="padding:36px 40px;">
@@ -119,6 +120,7 @@ const sendOTPEmail = async (email, otp, username) => {
               </p>
             </td>
           </tr>
+
           <!-- Footer -->
           <tr>
             <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
@@ -127,6 +129,7 @@ const sendOTPEmail = async (email, otp, username) => {
               </p>
             </td>
           </tr>
+
         </table>
       </td>
     </tr>
@@ -145,7 +148,7 @@ const sendOTPEmail = async (email, otp, username) => {
 };
 
 // ──────────────────────────────────────────────
-//  Exports — same API as before, no controller
+//  Exports — same API surface, no controller
 //  changes needed
 // ──────────────────────────────────────────────
 module.exports = {

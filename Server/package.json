@@ -23,6 +23,7 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mailtrap": "^4.5.1",
     "mongoose": "^8.14.1",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",

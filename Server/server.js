@@ -20,8 +20,8 @@ const requiredEnv = [
   "MONGO_URI",
   "JWT_SECRET",
   "FRONTEND_URL",
-  "MAILTRAP_API_TOKEN",
-  "MAILTRAP_FROM_EMAIL",
+  "RESEND_API_KEY",
+  "RESEND_FROM_EMAIL",
 ];
 requiredEnv.forEach((key) => {
   if (!process.env[key]) {

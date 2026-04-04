@@ -19,7 +19,7 @@ const getResendClient = () => {
 
 // Sender — "onboarding@resend.dev" works immediately without domain verification
 const FROM_ADDRESS =
-  process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+  process.env.RESEND_FROM_EMAIL || "[EMAIL_ADDRESS]";
 const FROM_NAME = process.env.FROM_NAME || "SkillBarter";
 
 // ──────────────────────────────────────────────

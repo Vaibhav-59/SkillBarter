@@ -10,10 +10,11 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-4.8-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
 [![Redux](https://img.shields.io/badge/Redux-Toolkit-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 [![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-skillbarter2.netlify.app-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://skillbarter2.netlify.app/)
 
 **SkillBarter** is a full-stack MERN platform where people trade knowledge — teach what you know, learn what you want. SmartAlgorithm based smart matching, real-time communication, blockchain-inspired smart contracts, gamification, and a rich community ecosystem.
 
-[🚀 Quick Start](#-quick-start) · [📸 Screenshots](#-web-app-screenshots) · [🏗️ Architecture](#️-architecture--project-structure) · [📡 API Docs](#-api-endpoints) · [🤝 Contributing](#-contributing)
+[🌐 Live Demo](#-live-demo) · [🚀 Quick Start](#-quick-start) · [📸 Screenshots](#-web-app-screenshots) · [🏗️ Architecture](#️-architecture--project-structure) · [📡 API Docs](#-api-endpoints) · [🤝 Contributing](#-contributing)
 
 </div>
 
@@ -23,6 +24,7 @@
 
 | Section | Description |
 |---|---|
+| [🌐 Live Demo](#-live-demo) | **Try the live app now** |
 | [🚀 Features](#-features) | Full platform feature overview |
 | [📸 Screenshots](#-web-app-screenshots) | App UI screenshots |
 | [🏗️ Architecture](#️-architecture--project-structure) | Project & folder structure |
@@ -40,6 +42,32 @@
 | [🔒 Security](#-security-features) | Security implementation |
 | [🧪 Development](#-development) | Dev workflow |
 | [🤝 Contributing](#-contributing) | How to contribute |
+
+---
+
+## 🌐 Live Demo
+
+<div align="center">
+
+### 🚀 The platform is live and fully deployed!
+
+<a href="https://skillbarter2.netlify.app/" target="_blank">
+  <img src="https://img.shields.io/badge/🌐_Open_Live_App-skillbarter2.netlify.app-00C7B7?style=for-the-badge&logo=netlify&logoColor=white" alt="Live Demo" height="50"/>
+</a>
+
+&nbsp;
+
+| | Details |
+|---|---|
+| 🔗 **URL** | [https://skillbarter2.netlify.app/](https://skillbarter2.netlify.app/) |
+| ☁️ **Hosted on** | Netlify (Frontend) |
+| ⚡ **Status** | ![Status](https://img.shields.io/website?url=https%3A%2F%2Fskillbarter2.netlify.app&style=flat-square&label=Status&up_message=Online&down_message=Offline) |
+| 🔐 **Auth** | Register a free account or use guest access |
+| 📱 **Mobile** | Fully responsive on all screen sizes |
+
+> **Note:** The backend is hosted on a free-tier server — the first request after inactivity may take ~20–30 seconds to wake up (cold start). Subsequent requests will be fast.
+
+</div>
 
 ---
 
@@ -1217,16 +1245,34 @@ REDIS_URL=redis://localhost:6379
 # Google Gemini AI
 GEMINI_API_KEY=your_gemini_api_key
 
+# Firebase Admin SDK (Server-side Google Auth verification)
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour_Private_Key_Here\n-----END PRIVATE KEY-----\n"
+
 # Frontend URL (for CORS)
 CLIENT_URL=http://localhost:5173
 ```
 
+> **Firebase Admin Key:** Download the service account JSON from [Firebase Console](https://console.firebase.google.com/) → Project Settings → Service Accounts → Generate new private key. Copy the `private_key` value (keep the `\n` newlines as-is, wrapped in double quotes).
+
 ### Client (`client/.env`)
 
 ```env
+# API & Socket
 VITE_API_URL=http://localhost:5000/api
 VITE_SOCKET_URL=http://localhost:5000
+
+# Firebase (Google Authentication)
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
+
+> **Firebase Setup:** Go to [Firebase Console](https://console.firebase.google.com/) → Create project → Add Web App → Copy the config values above.
 
 ---
 
@@ -1274,9 +1320,17 @@ cd client
 # Install dependencies
 npm install
 
-# Create environment file
-echo "VITE_API_URL=http://localhost:5000/api" > .env
-echo "VITE_SOCKET_URL=http://localhost:5000" >> .env
+# Create environment file (fill in your actual values)
+cat > .env << 'EOF'
+VITE_API_URL=http://localhost:5000/api
+VITE_SOCKET_URL=http://localhost:5000
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+EOF
 
 # Start development server
 npm run dev

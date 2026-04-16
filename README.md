@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🌉 SkillBarter
 
@@ -1173,6 +1173,147 @@ Every scored match returns:
    POST /api/auth/reset-password/:token  →  Validate token + expiry
                                           →  Update password
 ```
+
+---
+
+### 2. Google Login via Firebase
+
+SkillBarter uses **Firebase Authentication** on the frontend and **Firebase Admin SDK** on the backend to enable secure one-click Google Sign-In.
+
+#### Full Client to Server Flow
+
+```
+CLIENT (Browser)
+  User clicks "Continue with Google"
+       |
+       v
+  Firebase JS SDK  -->  signInWithPopup(GoogleAuthProvider)
+       |
+       v
+  Google OAuth  -->  Returns Firebase User + ID Token
+       |
+       v
+  POST /api/auth/google  { idToken: "<Firebase JWT>" }
+       |  HTTPS
+SERVER (Node.js)
+       |
+       v
+  Firebase Admin SDK: admin.auth().verifyIdToken(idToken)
+       |
+       v
+  Extract: { uid, email, name, picture }
+       |
+       |-- User exists?  -->  Fetch existing user
+       |-- New user?     -->  Create user (isGoogleUser: true)
+       |
+       v
+  Issue platform JWT Access Token + Refresh Token
+       |
+       v
+  Return { token, user }  -->  Client stores JWT
+```
+
+#### Packages Used
+
+| Side | Package | Purpose |
+|---|---|---|
+| **Frontend** | `firebase` | Firebase JS SDK - handles Google OAuth popup and returns ID token |
+| **Backend** | `firebase-admin` | Firebase Admin SDK - verifies Google ID tokens server-side |
+
+#### Frontend Code (firebase.js)
+
+```js
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+};
+
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async () => {
+  const result  = await signInWithPopup(auth, provider);
+  const idToken = await result.user.getIdToken();
+  return idToken; // Send this to your backend
+};
+```
+
+#### Backend Code (authController.js)
+
+```js
+// Firebase Admin initialization
+import admin from "firebase-admin";
+
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId:   process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  }),
+});
+
+// Google login endpoint: POST /api/auth/google
+export const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+
+  // Verify with Firebase Admin (throws if invalid or expired)
+  const decoded = await admin.auth().verifyIdToken(idToken);
+  const { email, name, picture } = decoded;
+
+  // Find or create user in MongoDB
+  let user = await User.findOne({ email });
+  if (!user) {
+    user = await User.create({ name, email, avatar: picture, isGoogleUser: true });
+  }
+
+  // Issue platform JWT (same as email/password flow)
+  const accessToken  = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "strict" });
+  res.json({ token: accessToken, user });
+};
+```
+
+#### Environment Variables Required
+
+| Location | Variable | Description |
+|---|---|---|
+| `client/.env` | `VITE_FIREBASE_API_KEY` | Firebase Web API key |
+| `client/.env` | `VITE_FIREBASE_AUTH_DOMAIN` | `your-project.firebaseapp.com` |
+| `client/.env` | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `client/.env` | `VITE_FIREBASE_STORAGE_BUCKET` | `your-project.firebasestorage.app` |
+| `client/.env` | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Numeric sender ID |
+| `client/.env` | `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `Server/.env` | `FIREBASE_PROJECT_ID` | Firebase project ID (Admin SDK) |
+| `Server/.env` | `FIREBASE_CLIENT_EMAIL` | Service account email |
+| `Server/.env` | `FIREBASE_PRIVATE_KEY` | Service account private key (quoted, `\n` preserved) |
+
+#### Firebase Console Setup Steps
+
+```
+1. Go to https://console.firebase.google.com/
+2. Create or open your project
+3. Authentication --> Sign-in method --> Enable "Google"
+4. Project Settings --> General --> Your apps --> Add Web App
+   Copy the firebaseConfig object values to client/.env
+5. Project Settings --> Service Accounts --> Generate new private key
+   Download JSON --> Copy projectId, clientEmail, privateKey to Server/.env
+6. Authentication --> Settings --> Authorized domains --> Add your domain
+```
+
+> **Security:** The Firebase ID Token is verified **server-side** using the Admin SDK.
+> The client can never forge a valid token. Only after successful verification does
+> the server issue its own JWT for all subsequent API requests.
+
 
 ---
 

@@ -5,8 +5,8 @@ const Review = require("../models/Review");
 const Meeting = require("../models/Meeting");
 const ErrorResponse = require("../utils/errorResponse");
 
-const INACTIVE_REMINDER_DAY = 10;
-const INACTIVE_DELETE_DAY = 15;
+const INACTIVE_REMINDER_DAY = 175; // Day 175 — reminder email sent (5 days before 6-month deletion)
+const INACTIVE_DELETE_DAY = 180;   // Day 180 — account deleted (6 months of inactivity)
 
 // @desc    Get admin dashboard statistics
 // @route   GET /api/admin/stats
@@ -60,17 +60,17 @@ exports.getAdminStats = async (req, res, next) => {
     ]);
     const averageRating = reviewStats[0]?.avgRating?.toFixed(1) || "0";
 
-    // User growth (last 12 months)
-    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    // User growth — day-wise for last 6 months
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
     const userGrowth = await User.aggregate([
-      { $match: { createdAt: { $gte: oneYearAgo } } },
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           count: { $sum: 1 }
         }
       },
-      { $sort: { "_id.year": 1, "_id.month": 1 } }
+      { $sort: { "_id": 1 } }
     ]);
 
     // Recent activities
@@ -415,10 +415,12 @@ exports.getInactiveUsers = async (req, res, next) => {
         users: inactiveUsers,
         summary: {
           totalInactive: inactiveUsers.length,
-          atRisk: inactiveUsers.filter(u => u.daysUntilDeletion <= 5).length,
+          // Users within 5 days of the 6-month deletion threshold
+          atRisk: inactiveUsers.filter(u => u.daysUntilDeletion <= 5 && u.daysUntilDeletion > 0).length,
           toBeDeleted: inactiveUsers.filter(u => u.status === "to_be_deleted").length,
-          reminderDay: INACTIVE_REMINDER_DAY,
-          deleteDay: INACTIVE_DELETE_DAY
+          reminderDay: INACTIVE_REMINDER_DAY, // Day 175
+          deleteDay: INACTIVE_DELETE_DAY,      // Day 180 (6 months)
+          policyDescription: "Accounts inactive for 6 months (180 days) are automatically deleted. A reminder is sent 5 days before deletion (day 175)."
         }
       }
     });

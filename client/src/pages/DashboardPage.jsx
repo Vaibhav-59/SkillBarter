@@ -14,6 +14,12 @@ export default function DashboardPage() {
   const [filterBy, setFilterBy] = useState("all");
   const [sortBy, setSortBy] = useState("default");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showSkillHubBanner, setShowSkillHubBanner] = useState(() => {
+    // Persist dismissal across sessions
+    return localStorage.getItem("skillhub_banner_dismissed") !== "true";
+  });
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(true);
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -195,6 +201,14 @@ export default function DashboardPage() {
     }
   };
 
+  // ─── fetch wallet balance ─────────────────────────────────────────────────
+  useEffect(() => {
+    api.get("/wallet")
+      .then((res) => setWalletBalance(res.data?.data?.balance ?? 0))
+      .catch(() => setWalletBalance(null))
+      .finally(() => setWalletLoading(false));
+  }, []);
+
   // ─── fetch users ──────────────────────────────────────────────────────────
   useEffect(() => {
     api.get(`/users/discover?t=${Date.now()}`).then((res) => {
@@ -312,6 +326,137 @@ export default function DashboardPage() {
       <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-24 md:pb-8 space-y-5 sm:space-y-8">
 
         {/* ════════════════════════════════════════════════
+            SKILLHUB PROMO BANNER
+        ════════════════════════════════════════════════ */}
+        {showSkillHubBanner && (
+          <div
+            className={`relative flex items-start gap-4 rounded-2xl p-4 sm:p-5 overflow-hidden transition-all duration-500 ${
+              isDarkMode
+                ? "bg-gradient-to-r from-blue-950/70 via-indigo-950/70 to-violet-950/70 border border-blue-700/40"
+                : "bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50 border border-blue-200/80"
+            }`}
+            style={{
+              boxShadow: isDarkMode
+                ? "0 4px 32px rgba(59,130,246,0.18), 0 0 0 1px rgba(99,102,241,0.15)"
+                : "0 4px 24px rgba(99,102,241,0.12), 0 0 0 1px rgba(99,102,241,0.08)",
+            }}
+          >
+            {/* Animated background shimmer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/5 to-transparent animate-pulse pointer-events-none" />
+
+            {/* Blue circle icon */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%)",
+                  boxShadow: "0 4px 20px rgba(59,130,246,0.45)",
+                }}
+              >
+                {/* Rocket / sparkle icon */}
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              {/* Pulse ring */}
+              <span className="absolute inset-0 rounded-full animate-ping opacity-20"
+                style={{ background: "radial-gradient(circle, #6366f1, transparent)" }} />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <p className={`text-[11px] font-bold uppercase tracking-widest mb-1 ${
+                isDarkMode ? "text-blue-400" : "text-blue-500"
+              }`}>
+                ✦ Explore SkillHub
+              </p>
+              <p className={`text-sm sm:text-[15px] font-semibold leading-snug mb-3 ${
+                isDarkMode ? "text-white" : "text-gray-800"
+              }`}>
+                Unlock the full power of SkillBarter —&nbsp;
+                <span className={isDarkMode ? "text-blue-300" : "text-blue-600"}>
+                  Time Banking
+                </span>,&nbsp;
+                <span className={isDarkMode ? "text-violet-300" : "text-violet-600"}>
+                  Gamification
+                </span>,&nbsp;
+                <span className={isDarkMode ? "text-indigo-300" : "text-indigo-600"}>
+                  Learning Paths
+                </span>,&nbsp;
+                <span className={isDarkMode ? "text-purple-300" : "text-purple-600"}>
+                  Skill Verification
+                </span>&nbsp;and many more features await you on&nbsp;
+                <span className="font-bold bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent">
+                  SkillHub
+                </span>!
+              </p>
+
+              {/* Feature chips */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {[
+                  { icon: "⏱", label: "Time Banking" },
+                  { icon: "🏆", label: "Gamification" },
+                  { icon: "📈", label: "Learning Paths" },
+                  { icon: "✅", label: "Skill Verification" },
+                  { icon: "👥", label: "Group Sessions" },
+                ].map(({ icon, label }) => (
+                  <span
+                    key={label}
+                    className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all duration-200 ${
+                      isDarkMode
+                        ? "bg-blue-500/10 border-blue-500/25 text-blue-300 hover:bg-blue-500/20"
+                        : "bg-white border-blue-200 text-blue-700 hover:border-blue-300 shadow-sm"
+                    }`}
+                  >
+                    {icon} {label}
+                  </span>
+                ))}
+              </div>
+
+              {/* Go to SkillHub button */}
+              <button
+                onClick={() => navigate("/skill-hub")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-[1.04] hover:shadow-lg active:scale-[0.97]"
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 60%, #8b5cf6 100%)",
+                  boxShadow: "0 4px 18px rgba(99,102,241,0.40)",
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Go to SkillHub
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Close / Cancel button */}
+            <button
+              onClick={() => {
+                setShowSkillHubBanner(false);
+                localStorage.setItem("skillhub_banner_dismissed", "true");
+              }}
+              className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
+                isDarkMode
+                  ? "text-slate-500 hover:text-white hover:bg-blue-800/60"
+                  : "text-gray-400 hover:text-gray-700 hover:bg-blue-100"
+              }`}
+              title="Dismiss"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════
             SEARCH & CONTROLS BAR
         ════════════════════════════════════════════════ */}
         <div className="flex flex-col gap-4">
@@ -323,9 +468,15 @@ export default function DashboardPage() {
               style={{ boxShadow: isDarkMode ? "0 0 0 1px rgba(99,102,241,.5), 0 4px 40px rgba(99,102,241,.12)" : "0 0 0 1px rgba(99,102,241,.3), 0 4px 24px rgba(99,102,241,.08)" }} />
 
             {/* Search icon */}
-            <div className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${searchFocused ? "text-indigo-500" : isDarkMode ? "text-slate-500" : "text-indigo-300"}`}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <div className={`absolute left-5 top-1/2 -translate-y-1/2 z-10 pointer-events-none transition-colors duration-300 ${
+              searchFocused
+                ? "text-indigo-500"
+                : isDarkMode
+                  ? "text-slate-400"
+                  : "text-indigo-400"
+            }`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
 
@@ -394,12 +545,64 @@ export default function DashboardPage() {
                 <span>{displayedUsers.length} {displayedUsers.length === allUsers.length ? "members" : "results"}</span>
               </div>
 
-              {/* Time Banking icon — hidden on mobile (use MobileNav More menu) */}
-              <Link to="/skill-hub/time-banking"
-                className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-200 ${t.iconBtn}`}
-                title="Time Banking">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              {/* ── Time Banking Credit Balance Pill — visible on ALL sizes ── */}
+              <Link
+                to="/skill-hub/time-banking"
+                title="Go to Time Banking"
+                className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300 group hover:scale-[1.03] active:scale-[0.97] ${
+                  isDarkMode
+                    ? "bg-gradient-to-r from-amber-500/10 via-yellow-500/8 to-orange-500/10 border-amber-500/30 hover:border-amber-400/60 hover:from-amber-500/18 hover:via-yellow-500/14 hover:to-orange-500/16"
+                    : "bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-amber-200 hover:border-amber-300 shadow-sm"
+                }`}
+                style={{
+                  boxShadow: isDarkMode
+                    ? "0 2px 12px rgba(245,158,11,0.14)"
+                    : "0 2px 10px rgba(245,158,11,0.10)",
+                }}
+              >
+                {/* Coin icon in amber circle */}
+                <div
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:rotate-12"
+                  style={{
+                    background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
+                    boxShadow: "0 2px 8px rgba(245,158,11,0.40)",
+                  }}
+                >
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                  </svg>
+                </div>
+
+                {/* Balance — mobile: coin+number only; desktop: full Credits label + number */}
+                <div className="flex flex-col leading-none">
+                  {/* "Credits" label — hidden on mobile, shown on sm+ */}
+                  <span className={`hidden sm:block text-[10px] font-bold uppercase tracking-wider ${
+                    isDarkMode ? "text-amber-500/80" : "text-amber-600/80"
+                  }`}>
+                    Credits
+                  </span>
+                  <span className={`text-xs sm:text-sm font-extrabold tabular-nums ${
+                    isDarkMode ? "text-amber-300" : "text-amber-700"
+                  }`}>
+                    {walletLoading ? (
+                      <span className="inline-block w-7 sm:w-10 h-3 sm:h-3.5 rounded-full animate-pulse bg-current opacity-30" />
+                    ) : walletBalance === null ? (
+                      "—"
+                    ) : (
+                      walletBalance.toLocaleString()
+                    )}
+                  </span>
+                </div>
+
+                {/* Arrow — hidden on mobile to save space, shown on sm+ */}
+                <svg
+                  className={`hidden sm:block w-3.5 h-3.5 flex-shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${
+                    isDarkMode ? "text-amber-500/60" : "text-amber-400"
+                  }`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
 

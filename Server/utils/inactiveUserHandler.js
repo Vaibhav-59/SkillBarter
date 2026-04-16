@@ -4,8 +4,8 @@ const Skill = require("../models/Skill");
 const Match = require("../models/Match");
 const Review = require("../models/Review");
 
-const INACTIVE_REMINDER_DAY = 10;
-const INACTIVE_DELETE_DAY = 15;
+const INACTIVE_REMINDER_DAY = 175; // 5 days before 6 months (day 175)
+const INACTIVE_DELETE_DAY = 180;   // 6 months of inactivity triggers deletion
 
 async function checkInactiveUsers() {
   try {
@@ -40,9 +40,9 @@ async function sendReminderEmail(user, daysInactive) {
 
   const message = `Hi ${user.name},
 
-We noticed you haven't logged in to SkillBarter for a while.
+We noticed you haven't logged in to SkillBarter for nearly 6 months.
 
-Your account will be deleted in ${daysLeft} day(s) if you don't log in.
+Your account will be permanently deleted in ${daysLeft} day(s) if you don't log in. After 6 months of inactivity, accounts are automatically removed to keep the platform healthy.
 
 To keep your account active, simply log in to SkillBarter.
 
@@ -58,13 +58,16 @@ SkillBarter Team`;
       </div>
       <div style="padding: 20px;">
         <h2 style="color: #333;">Hi ${user.name},</h2>
-        <p style="color: #666; font-size: 16px;">We noticed you haven't logged in to SkillBarter for a while.</p>
+        <p style="color: #666; font-size: 16px;">We noticed you haven't logged in to SkillBarter for nearly <strong>6 months</strong>.</p>
         <div style="background: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
           <p style="color: #92400E; font-size: 16px; margin: 0;">
-            <strong>Your account will be deleted in ${daysLeft} day(s) if you don't log in.</strong>
+            <strong>⚠️ Your account will be permanently deleted in ${daysLeft} day(s) if you don't log in.</strong>
           </p>
         </div>
-        <p style="color: #666; font-size: 16px;">To keep your account active, simply log in to SkillBarter.</p>
+        <p style="color: #666; font-size: 16px;">Accounts inactive for 6 months are automatically removed to keep our platform healthy. To keep your account, simply log back in.</p>
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${process.env.FRONTEND_URL || 'https://skillbarter2.netlify.app'}/login" style="display: inline-block; background: #4F46E5; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Log in to SkillBarter</a>
+        </div>
         <p style="color: #666; font-size: 16px;">If you have any questions, please contact us.</p>
       </div>
       <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 0 0 10px 10px;">
@@ -77,7 +80,7 @@ SkillBarter Team`;
   try {
     await sendEmail({
       email: user.email,
-      subject: "SkillBarter: Your account will be deleted soon!",
+      subject: "SkillBarter: Action Required — Your account will be deleted in " + daysLeft + " day(s)",
       message,
       html,
     });
@@ -95,7 +98,7 @@ async function sendDeletionNotificationEmail(user) {
 
 Your SkillBarter account has been deleted due to inactivity.
 
-You haven't logged in for more than 15 days, so your account has been automatically removed from our system.
+You haven't logged in for more than 6 months, so your account has been automatically removed from our system.
 
 If you'd like to join SkillBarter again, you can create a new account anytime.
 
@@ -112,7 +115,7 @@ SkillBarter Team`;
         <p style="color: #666; font-size: 16px;">Your SkillBarter account has been deleted due to inactivity.</p>
         <div style="background: #FEE2E2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #DC2626;">
           <p style="color: #991B1B; font-size: 16px; margin: 0;">
-            <strong>You haven't logged in for more than 15 days, so your account has been automatically removed from our system.</strong>
+            <strong>You haven't logged in for more than 6 months, so your account has been automatically removed from our system.</strong>
           </p>
         </div>
         <p style="color: #666; font-size: 16px;">If you'd like to join SkillBarter again, you can create a new account anytime.</p>

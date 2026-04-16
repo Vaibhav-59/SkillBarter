@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAdminStatsAsync,
-  fetchInactiveUsersAsync,
-  cleanupInactiveUsersAsync,
 } from "../../redux/slices/adminSlice";
-import { showError, showSuccess } from "../../utils/toast";
+import { showError } from "../../utils/toast";
 import { useTheme } from "../../hooks/useTheme";
 
 // ── Icons ────────────────────────────────────────────────────────
@@ -141,36 +139,22 @@ const ActivityTimeline = ({ activities = [], d }) => {
 // ── Main Component ────────────────────────────────────────────────
 export default function StatsOverview() {
   const dispatch = useDispatch();
-  const { adminStats, loading, error, inactiveUsers, inactiveUsersSummary, inactiveUsersLoading } = useSelector((state) => state.admin);
+  const { adminStats, loading, error } = useSelector((state) => state.admin);
   const [refreshing, setRefreshing] = useState(false);
   const { isDarkMode: d } = useTheme();
 
   useEffect(() => {
     dispatch(fetchAdminStatsAsync());
-    dispatch(fetchInactiveUsersAsync());
   }, [dispatch]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
       await dispatch(fetchAdminStatsAsync()).unwrap();
-      await dispatch(fetchInactiveUsersAsync()).unwrap();
     } catch (err) {
       showError("Failed to refresh statistics");
     } finally {
       setRefreshing(false);
-    }
-  };
-
-  const handleCleanup = async () => {
-    if (!window.confirm("Are you sure you want to delete all inactive users?")) return;
-    try {
-      await dispatch(cleanupInactiveUsersAsync()).unwrap();
-      showSuccess("Inactive users cleaned up successfully");
-      dispatch(fetchInactiveUsersAsync());
-      dispatch(fetchAdminStatsAsync());
-    } catch (err) {
-      showError(err.message || "Failed to cleanup inactive users");
     }
   };
 
@@ -340,106 +324,7 @@ export default function StatsOverview() {
           </ChartCard>
         </div>
 
-        {/* Inactive Users Section */}
-        <Card d={d}>
-          <div className={`p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 ${d ? "border-white/5 bg-white/[0.01]" : "border-slate-100 bg-slate-50/40"}`}>
-            <div>
-              <h3 className={`text-xl font-bold ${d ? "text-white" : "text-slate-800"}`}>Inactive Users Management</h3>
-              <p className={`text-sm mt-1 font-medium ${d ? "text-slate-400" : "text-slate-500"}`}>Users inactive for {inactiveUsersSummary?.deleteDay || 15} days face automated cleanup</p>
-            </div>
-            <button
-              onClick={handleCleanup}
-              disabled={loading || inactiveUsersSummary?.toBeDeleted === 0}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                d ? "bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30" : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
-              }`}
-            >
-              {loading ? "Processing..." : "Delete All Inactive"}
-            </button>
-          </div>
 
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`p-4 rounded-xl border ${d ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-50 border-amber-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider ${d ? "text-amber-500/70" : "text-amber-600/70"}`}>Total Inactive</p>
-                <p className={`text-2xl font-black mt-1 ${d ? "text-amber-400" : "text-amber-700"}`}>{inactiveUsersSummary?.totalInactive || 0}</p>
-              </div>
-              <div className={`p-4 rounded-xl border ${d ? "bg-orange-500/10 border-orange-500/20" : "bg-orange-50 border-orange-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider ${d ? "text-orange-500/70" : "text-orange-600/70"}`}>At Risk</p>
-                <p className={`text-2xl font-black mt-1 ${d ? "text-orange-400" : "text-orange-700"}`}>{inactiveUsersSummary?.atRisk || 0}</p>
-              </div>
-              <div className={`p-4 rounded-xl border ${d ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider ${d ? "text-red-500/70" : "text-red-600/70"}`}>To Delete</p>
-                <p className={`text-2xl font-black mt-1 ${d ? "text-red-400" : "text-red-700"}`}>{inactiveUsersSummary?.toBeDeleted || 0}</p>
-              </div>
-              <div className={`p-4 rounded-xl border ${d ? "bg-blue-500/10 border-blue-500/20" : "bg-blue-50 border-blue-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider ${d ? "text-blue-500/70" : "text-blue-600/70"}`}>Reminder Day</p>
-                <p className={`text-2xl font-black mt-1 ${d ? "text-blue-400" : "text-blue-700"}`}>{inactiveUsersSummary?.reminderDay || 10}</p>
-              </div>
-            </div>
-
-            {inactiveUsersLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : inactiveUsers?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className={`border-b text-xs font-semibold uppercase tracking-widest whitespace-nowrap ${d ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"}`}>
-                      <th className="text-left py-3 px-4">User</th>
-                      <th className="text-left py-3 px-4">Last Activity</th>
-                      <th className="text-left py-3 px-4">Days Inactive</th>
-                      <th className="text-left py-3 px-4">Status</th>
-                      <th className="text-left py-3 px-4">Days Left</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${d ? "divide-white/[0.04]" : "divide-slate-50"}`}>
-                    {inactiveUsers.slice(0, 10).map((user) => (
-                      <tr key={user._id} className={`transition-colors duration-150 ${d ? "hover:bg-white/[0.02]" : "hover:bg-slate-50"}`}>
-                        <td className="py-4 px-4">
-                          <div>
-                            <p className={`font-bold ${d ? "text-white" : "text-slate-800"}`}>{user.name}</p>
-                            <p className={`text-xs mt-0.5 ${d ? "text-slate-500" : "text-slate-500"}`}>{user.email}</p>
-                          </div>
-                        </td>
-                        <td className={`py-4 px-4 font-medium ${d ? "text-slate-300" : "text-slate-600"}`}>
-                          {new Date(user.lastActivity).toLocaleDateString()}
-                        </td>
-                        <td className={`py-4 px-4 font-bold ${d ? "text-orange-400" : "text-orange-600"}`}>{user.daysInactive} days</td>
-                        <td className="py-4 px-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
-                            user.status === "to_be_deleted" 
-                              ? d ? "bg-red-500/15 text-red-400 border-red-500/30" : "bg-red-50 text-red-700 border-red-200"
-                              : user.status === "reminder_sent"
-                              ? d ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200"
-                              : d ? "bg-blue-500/15 text-blue-400 border-blue-500/30" : "bg-blue-50 text-blue-700 border-blue-200"
-                          }`}>
-                            {user.status === "to_be_deleted" ? "Delete Soon" : user.status === "reminder_sent" ? "Reminded" : "Inactive"}
-                          </span>
-                        </td>
-                        <td className={`py-4 px-4 font-black ${d ? "text-red-400" : "text-red-600"}`}>{user.daysUntilDeletion} days</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {inactiveUsers.length > 10 && (
-                  <p className={`text-center text-xs font-medium mt-4 ${d ? "text-slate-500" : "text-slate-500"}`}>
-                    Showing {Math.min(10, inactiveUsers.length)} of {inactiveUsers.length} inactive users
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className={`text-center py-12 rounded-xl border border-dashed ${d ? "bg-white/[0.01] border-white/10" : "bg-slate-50 border-slate-200"}`}>
-                <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 ${d ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-600"}`}>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                </div>
-                <p className={`text-sm font-bold ${d ? "text-slate-300" : "text-slate-700"}`}>No inactive users</p>
-                <p className={`text-xs mt-1 ${d ? "text-slate-500" : "text-slate-500"}`}>Platform retention is currently highly active.</p>
-              </div>
-            )}
-          </div>
-        </Card>
 
         {/* Footer */}
         <div className={`text-center text-xs font-semibold py-4 ${d ? "text-slate-500" : "text-slate-400"}`}>

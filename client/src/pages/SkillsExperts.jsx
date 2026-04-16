@@ -125,9 +125,12 @@ export default function SkillsExperts() {
         {/* Search + Sort */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <svg className={`w-5 h-5 ${isDarkMode ? "text-slate-400" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+              <svg
+                className={`w-5 h-5 ${isDarkMode ? "text-slate-400" : "text-violet-400"}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <input

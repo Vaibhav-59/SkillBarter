@@ -88,17 +88,191 @@ function MetricRow({ label, value, accent="emerald", d }) {
   );
 }
 
-// ── Growth Bar ───────────────────────────────────────────────────
-function GrowthBar({ month, count, max, d }) {
-  const pct = max > 0 ? Math.round((count/max)*100) : 0;
-  return (
-    <div className={`p-4 rounded-xl border ${d?"border-white/5 bg-white/[0.02]":"border-slate-100 bg-slate-50"}`}>
-      <p className={`text-xs font-medium mb-2 ${d?"text-slate-400":"text-slate-500"}`}>{month}</p>
-      <div className={`h-2 rounded-full overflow-hidden mb-2 ${d?"bg-slate-800":"bg-slate-200"}`}>
-        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" style={{width:`${pct}%`}}/>
+// ── Day-wise SVG Line Chart ──────────────────────────────────────
+function DayWiseLineChart({ data, d }) {
+  const [tooltip, setTooltip] = useState(null);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className={`flex flex-col items-center justify-center py-16 gap-3 ${d?"text-slate-600":"text-slate-400"}`}>
+        <svg className="w-12 h-12 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <p className="text-sm font-medium">No registration data for the last 6 months</p>
       </div>
-      <p className={`text-2xl font-black ${d?"text-emerald-400":"text-emerald-600"}`}>{count}</p>
-      <p className={`text-xs ${d?"text-slate-500":"text-slate-400"}`}>new users</p>
+    );
+  }
+
+  // Build a complete 180-day scaffold so gaps show as 0
+  const today = new Date();
+  const sixMonthsAgo = new Date(today.getTime() - 179 * 24 * 60 * 60 * 1000);
+  const dataMap = {};
+  data.forEach(item => { dataMap[item._id] = item.count; });
+
+  const days = [];
+  for (let i = 0; i < 180; i++) {
+    const dt = new Date(sixMonthsAgo.getTime() + i * 24 * 60 * 60 * 1000);
+    const key = dt.toISOString().slice(0, 10);
+    days.push({ date: key, count: dataMap[key] || 0 });
+  }
+
+  const W = 900, H = 220, PAD_L = 48, PAD_R = 20, PAD_T = 16, PAD_B = 40;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+  const maxCount = Math.max(...days.map(d => d.count), 1);
+
+  const xOf = i => PAD_L + (i / (days.length - 1)) * chartW;
+  const yOf = v => PAD_T + chartH - (v / maxCount) * chartH;
+
+  // Build SVG path
+  const linePath = days.map((pt, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(pt.count).toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${xOf(days.length-1).toFixed(1)},${(PAD_T+chartH).toFixed(1)} L${PAD_L},${(PAD_T+chartH).toFixed(1)} Z`;
+
+  // Month boundary X labels
+  const monthLabels = [];
+  let lastMonth = null;
+  days.forEach((pt, i) => {
+    const m = pt.date.slice(0, 7);
+    if (m !== lastMonth) {
+      lastMonth = m;
+      const d = new Date(pt.date + 'T00:00:00');
+      monthLabels.push({ x: xOf(i), label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) });
+    }
+  });
+
+  // Y-axis ticks
+  const yTicks = [0, Math.round(maxCount * 0.25), Math.round(maxCount * 0.5), Math.round(maxCount * 0.75), maxCount];
+
+  const totalRegistrations = days.reduce((s, d) => s + d.count, 0);
+  const peakDay = days.reduce((a, b) => b.count > a.count ? b : a, days[0]);
+  const avgPerDay = (totalRegistrations / 180).toFixed(1);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary pills */}
+      <div className="flex flex-wrap gap-3">
+        {[
+          { label: 'Total (6mo)', value: totalRegistrations, color: d?'text-emerald-400':'text-emerald-600', bg: d?'bg-emerald-500/10 border-emerald-500/20':'bg-emerald-50 border-emerald-200' },
+          { label: 'Peak Day', value: `${peakDay.count} (${peakDay.date})`, color: d?'text-indigo-400':'text-indigo-600', bg: d?'bg-indigo-500/10 border-indigo-500/20':'bg-indigo-50 border-indigo-200' },
+          { label: 'Avg / Day', value: avgPerDay, color: d?'text-teal-400':'text-teal-600', bg: d?'bg-teal-500/10 border-teal-500/20':'bg-teal-50 border-teal-200' },
+        ].map((item, i) => (
+          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${item.bg}`}>
+            <span className={d?'text-slate-400':'text-slate-500'}>{item.label}:</span>
+            <span className={`font-black ${item.color}`}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* SVG Chart */}
+      <div className="relative w-full" style={{ paddingBottom: `${(H/W)*100}%` }}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="absolute inset-0 w-full h-full"
+          onMouseLeave={() => setTooltip(null)}
+        >
+          <defs>
+            <linearGradient id="chartAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={d?'#10b981':'#059669'} stopOpacity="0.35"/>
+              <stop offset="100%" stopColor={d?'#10b981':'#059669'} stopOpacity="0"/>
+            </linearGradient>
+            <linearGradient id="chartLineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#6366f1"/>
+              <stop offset="50%" stopColor="#10b981"/>
+              <stop offset="100%" stopColor="#14b8a6"/>
+            </linearGradient>
+          </defs>
+
+          {/* Y-axis grid lines + labels */}
+          {yTicks.map((tick, i) => (
+            <g key={i}>
+              <line
+                x1={PAD_L} y1={yOf(tick)} x2={W - PAD_R} y2={yOf(tick)}
+                stroke={d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)'}
+                strokeWidth="1"
+                strokeDasharray={i>0?'3,4':'none'}
+              />
+              <text
+                x={PAD_L - 6} y={yOf(tick) + 4}
+                textAnchor="end"
+                fontSize="10"
+                fill={d?'#64748b':'#94a3b8'}
+                fontFamily="sans-serif"
+              >{tick}</text>
+            </g>
+          ))}
+
+          {/* Month boundary vertical lines + labels */}
+          {monthLabels.map((ml, i) => (
+            <g key={i}>
+              <line
+                x1={ml.x} y1={PAD_T} x2={ml.x} y2={PAD_T + chartH}
+                stroke={d?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.08)'}
+                strokeWidth="1"
+                strokeDasharray="2,4"
+              />
+              <text
+                x={ml.x + 4} y={PAD_T + chartH + 14}
+                fontSize="10"
+                fill={d?'#94a3b8':'#64748b'}
+                fontFamily="sans-serif"
+                fontWeight="600"
+              >{ml.label}</text>
+            </g>
+          ))}
+
+          {/* Area fill */}
+          <path d={areaPath} fill="url(#chartAreaGrad)"/>
+
+          {/* Line */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke="url(#chartLineGrad)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Hover capture layer */}
+          {days.map((pt, i) => (
+            <rect
+              key={i}
+              x={xOf(i) - chartW/(days.length*2)}
+              y={PAD_T}
+              width={chartW/days.length}
+              height={chartH}
+              fill="transparent"
+              onMouseEnter={e => {
+                if (pt.count > 0) setTooltip({ x: xOf(i), y: yOf(pt.count), date: pt.date, count: pt.count });
+              }}
+              onMouseLeave={() => setTooltip(null)}
+            />
+          ))}
+
+          {/* Dot on hover */}
+          {tooltip && (
+            <>
+              <line
+                x1={tooltip.x} y1={PAD_T} x2={tooltip.x} y2={PAD_T+chartH}
+                stroke={d?'rgba(16,185,129,0.4)':'rgba(5,150,105,0.3)'}
+                strokeWidth="1"
+                strokeDasharray="3,3"
+              />
+              <circle cx={tooltip.x} cy={tooltip.y} r="5" fill={d?'#10b981':'#059669'} stroke={d?'#0d1120':'white'} strokeWidth="2"/>
+              {/* Tooltip box */}
+              <g transform={`translate(${Math.min(tooltip.x + 10, W - 130)},${Math.max(tooltip.y - 38, PAD_T)})`}>
+                <rect rx="6" ry="6" width="120" height="36"
+                  fill={d?'#1e293b':'#f8fafc'}
+                  stroke={d?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.12)'}
+                  strokeWidth="1"
+                />
+                <text x="8" y="14" fontSize="10" fill={d?'#94a3b8':'#64748b'} fontFamily="sans-serif">{tooltip.date}</text>
+                <text x="8" y="28" fontSize="12" fontWeight="700" fill={d?'#10b981':'#059669'} fontFamily="sans-serif">{tooltip.count} new user{tooltip.count !== 1 ? 's' : ''}</text>
+              </g>
+            </>
+          )}
+        </svg>
+      </div>
     </div>
   );
 }
@@ -165,7 +339,6 @@ export default function DataAnalysis() {
   const topSkills  = adminStats?.topSkills || [];
   const matchStats = adminStats?.matchStatistics || {};
   const userGrowth = adminStats?.userGrowth || [];
-  const maxGrowth  = Math.max(...userGrowth.map(m => m.count || 0), 1);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${d?"bg-[#060912]":"bg-slate-50"}`}>
@@ -252,23 +425,21 @@ export default function DataAnalysis() {
               </Card>
             </div>
 
-            {/* User Growth */}
+            {/* User Growth — Day-wise Line Chart */}
             <Card d={d}>
-              <CardHeader title="User Growth Trend" badge="Last 6 Months" d={d}/>
+              <CardHeader
+                title="User Registration Trend"
+                badge="Last 6 Months · Day-wise"
+                d={d}
+                action={
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                    d?'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                     :'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>📅 180 days</span>
+                }
+              />
               <div className="p-5">
-                {userGrowth.length>0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {userGrowth.slice(-6).map((month,i)=>(
-                      <GrowthBar
-                        key={i}
-                        month={month._id ? `${month._id.month}/${month._id.year}` : `Month ${i+1}`}
-                        count={month.count}
-                        max={maxGrowth}
-                        d={d}
-                      />
-                    ))}
-                  </div>
-                ) : <p className={`text-center py-10 text-sm ${d?"text-slate-600":"text-slate-400"}`}>No growth data available</p>}
+                <DayWiseLineChart data={userGrowth} d={d}/>
               </div>
             </Card>
 
@@ -310,9 +481,117 @@ export default function DataAnalysis() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={WarnIcon}  label="Total Inactive"  value={inactiveUsersSummary.totalInactive||0}  subtitle="Not logged in recently"    accent="amber"  d={d}/>
               <StatCard icon={AlertIcon} label="At Risk"         value={inactiveUsersSummary.atRisk||0}         subtitle="Within 5 days of deletion" accent="red"    d={d}/>
-              <StatCard icon={TrashIcon} label="To Be Deleted"   value={inactiveUsersSummary.toBeDeleted||0}    subtitle="15+ days inactive"         accent="red"    d={d}/>
-              <StatCard icon={MailIcon}  label="Reminder Day"    value={inactiveUsersSummary.reminderDay||10}   subtitle="Email reminder sent"        accent="blue"   d={d}/>
+              <StatCard icon={TrashIcon} label="To Be Deleted"   value={inactiveUsersSummary.toBeDeleted||0}    subtitle="180 days (6mo) inactive"   accent="red"    d={d}/>
+              <StatCard icon={MailIcon}  label="Reminder Sent"   value={inactiveUsersSummary.reminderDay||175}  subtitle="Day reminder email sent"    accent="blue"   d={d}/>
             </div>
+
+            {/* ── 6-Month Inactivity Distribution Chart ── */}
+            <Card d={d}>
+              <CardHeader
+                title="Inactivity Distribution — 6-Month Buckets"
+                badge="Last 180 days"
+                d={d}
+                action={
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                    d?'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                     :'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>⚠️ Policy: 180 days</span>
+                }
+              />
+              <div className="p-5 space-y-5">
+                {(() => {
+                  const buckets = [
+                    { label: "0 – 1 mo",   range: [1,   30],  color: d?"from-emerald-500 to-teal-400":"from-emerald-500 to-teal-400",   bg: d?"bg-emerald-500/10 border-emerald-500/20":"bg-emerald-50 border-emerald-200",   text: d?"text-emerald-400":"text-emerald-700"   },
+                    { label: "1 – 2 mo",   range: [31,  60],  color: d?"from-yellow-500 to-amber-400":"from-yellow-500 to-amber-400",    bg: d?"bg-yellow-500/10 border-yellow-500/20":"bg-yellow-50 border-yellow-200",     text: d?"text-yellow-400":"text-yellow-700"    },
+                    { label: "2 – 3 mo",   range: [61,  90],  color: d?"from-orange-500 to-amber-500":"from-orange-500 to-amber-500",    bg: d?"bg-orange-500/10 border-orange-500/20":"bg-orange-50 border-orange-200",     text: d?"text-orange-400":"text-orange-700"    },
+                    { label: "3 – 4 mo",   range: [91,  120], color: d?"from-red-400 to-rose-500":"from-red-400 to-rose-500",           bg: d?"bg-red-500/10 border-red-500/20":"bg-red-50 border-red-200",               text: d?"text-red-400":"text-red-700"          },
+                    { label: "4 – 5 mo",   range: [121, 150], color: d?"from-rose-500 to-pink-600":"from-rose-500 to-pink-600",         bg: d?"bg-rose-500/10 border-rose-500/20":"bg-rose-50 border-rose-200",             text: d?"text-rose-400":"text-rose-700"        },
+                    { label: "5 – 6+ mo",  range: [151, 999], color: d?"from-red-700 to-red-500":"from-red-700 to-red-500",            bg: d?"bg-red-700/10 border-red-700/20":"bg-red-100 border-red-300",               text: d?"text-red-300":"text-red-800"          },
+                  ];
+                  const counts = buckets.map(b =>
+                    inactiveUsers.filter(u => u.daysInactive >= b.range[0] && u.daysInactive <= b.range[1]).length
+                  );
+                  const maxCount = Math.max(...counts, 1);
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Bucket columns */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {buckets.map((b, i) => {
+                          const pct = Math.round((counts[i] / maxCount) * 100);
+                          return (
+                            <div key={i} className={`rounded-2xl border p-3 space-y-2 ${b.bg}`}>
+                              <p className={`text-[10px] font-black uppercase tracking-widest ${b.text}`}>{b.label}</p>
+                              <div className={`h-20 rounded-xl overflow-hidden flex flex-col-reverse ${d?"bg-slate-800/60":"bg-white/60"}`}>
+                                <div
+                                  className={`w-full rounded-xl bg-gradient-to-t ${b.color} transition-all duration-700`}
+                                  style={{ height: `${pct}%`, minHeight: counts[i]>0?'8px':'0' }}
+                                />
+                              </div>
+                              <p className={`text-2xl font-black leading-none ${b.text}`}>{counts[i]}</p>
+                              <p className={`text-[10px] font-medium ${d?"text-slate-500":"text-slate-400"}`}>users</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Proportional stacked bar */}
+                      {(inactiveUsersSummary.totalInactive||0) > 0 && (
+                        <div className="space-y-2">
+                          <p className={`text-xs font-semibold ${d?"text-slate-400":"text-slate-500"}`}>Proportional breakdown</p>
+                          <div className={`flex h-4 rounded-full overflow-hidden ${d?"bg-slate-800":"bg-slate-100"}`}>
+                            {buckets.map((b, i) => {
+                              const pct = (counts[i] / (inactiveUsersSummary.totalInactive||1)) * 100;
+                              if (pct === 0) return null;
+                              return (
+                                <div
+                                  key={i}
+                                  title={`${b.label}: ${counts[i]} users (${pct.toFixed(1)}%)`}
+                                  className={`h-full bg-gradient-to-r ${b.color} transition-all duration-700`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              );
+                            })}
+                          </div>
+                          <div className="flex flex-wrap gap-3 mt-1">
+                            {buckets.map((b, i) => counts[i] > 0 && (
+                              <div key={i} className="flex items-center gap-1.5">
+                                <div className={`w-2.5 h-2.5 rounded-full bg-gradient-to-r ${b.color}`}/>
+                                <span className={`text-[10px] font-semibold ${d?"text-slate-400":"text-slate-500"}`}>{b.label}: <strong className={b.text}>{counts[i]}</strong></span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 6-month lifecycle timeline */}
+                      <div className={`rounded-2xl border p-4 ${d?"border-white/5 bg-white/[0.02]":"border-slate-100 bg-slate-50"}`}>
+                        <p className={`text-xs font-bold mb-3 ${d?"text-slate-300":"text-slate-700"}`}>📅 6-Month Account Lifecycle Timeline</p>
+                        <div className="relative">
+                          <div className={`h-2.5 rounded-full overflow-hidden ${d?"bg-slate-800":"bg-slate-200"}`}>
+                            <div className="h-full w-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 via-orange-500 to-red-600 opacity-80"/>
+                          </div>
+                          <div className="flex justify-between mt-2">
+                            {[
+                              { label:"Day 0",   sub:"Last login",        color:d?"text-emerald-400":"text-emerald-600" },
+                              { label:"30d",     sub:"1 month",           color:d?"text-yellow-400":"text-yellow-600"   },
+                              { label:"90d",     sub:"3 months",          color:d?"text-orange-400":"text-orange-600"   },
+                              { label:"Day 175", sub:"⚠ Reminder email",  color:d?"text-amber-300":"text-amber-700"    },
+                              { label:"Day 180", sub:"🗑 Auto-deleted",    color:d?"text-red-400":"text-red-600"        },
+                            ].map((m, i) => (
+                              <div key={i} className="text-center">
+                                <p className={`text-[10px] font-black ${m.color}`}>{m.label}</p>
+                                <p className={`text-[9px] font-medium ${d?"text-slate-500":"text-slate-400"}`}>{m.sub}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </Card>
 
             {/* Table */}
             <Card d={d}>
@@ -327,15 +606,19 @@ export default function DataAnalysis() {
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                       d?"bg-red-500/15 hover:bg-red-500/25 text-red-400 border-red-500/30":"bg-red-50 hover:bg-red-100 text-red-700 border-red-200"}`}>
                     <TrashIcon cls="w-3.5 h-3.5"/>
-                    {loading?"Processing…":"Delete All"}
+                    {loading?"Processing…":"Delete All Marked"}
                   </button>
                 }
               />
 
-              {/* sub-info */}
-              <div className={`px-5 py-2.5 border-b ${d?"border-white/5 bg-white/[0.01]":"border-slate-100 bg-slate-50/30"}`}>
-                <p className={`text-xs ${d?"text-slate-500":"text-slate-400"}`}>
-                  Users are deleted after <span className={`font-semibold ${d?"text-slate-300":"text-slate-600"}`}>{inactiveUsersSummary.deleteDay||15}</span> days of inactivity
+              {/* Policy banner */}
+              <div className={`px-5 py-2.5 border-b ${d?"border-white/5 bg-amber-500/5":"border-slate-100 bg-amber-50/50"}`}>
+                <p className={`text-xs ${d?"text-amber-400/80":"text-amber-700"}`}>
+                  📋 <strong>6-Month Policy:</strong> Accounts inactive for{" "}
+                  <span className={`font-semibold ${d?"text-slate-200":"text-slate-700"}`}>{inactiveUsersSummary.deleteDay||180} days</span>{" "}
+                  (~6 months) are permanently deleted. Reminder email sent on day{" "}
+                  <span className={`font-semibold ${d?"text-slate-200":"text-slate-700"}`}>{inactiveUsersSummary.reminderDay||175}</span>{" "}
+                  (5 days before deletion).
                 </p>
               </div>
 
@@ -348,53 +631,78 @@ export default function DataAnalysis() {
                   <table className="min-w-full">
                     <thead>
                       <tr className={`border-b ${d?"border-white/5":"border-slate-100"}`}>
-                        {["User","Last Activity","Days Inactive","Status","Days Until Deletion","Action"].map(col=>(
+                        {["User","Last Activity","Days Inactive","Month Bucket","Status","Days Until Deletion","Action"].map(col=>(
                           <th key={col} className={`px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest whitespace-nowrap ${d?"text-slate-500":"text-slate-400"}`}>{col}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${d?"divide-white/[0.04]":"divide-slate-50"}`}>
-                      {inactiveUsers.map(user=>(
-                        <tr key={user._id} className={`transition-colors duration-150 ${d?"hover:bg-red-500/[0.04]":"hover:bg-red-50/40"}`}>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2.5">
-                              <Avatar name={user.name}/>
-                              <div>
-                                <p className={`text-sm font-semibold ${d?"text-slate-100":"text-slate-800"}`}>{user.name}</p>
-                                <p className={`text-xs ${d?"text-slate-500":"text-slate-400"}`}>{user.email}</p>
+                      {inactiveUsers.map(user=>{
+                        const days = user.daysInactive;
+                        const bucket =
+                          days <= 30  ? { label:"0–1 mo",  color:d?"text-emerald-400":"text-emerald-700", bg:d?"bg-emerald-500/10":"bg-emerald-50" } :
+                          days <= 60  ? { label:"1–2 mo",  color:d?"text-yellow-400":"text-yellow-700",  bg:d?"bg-yellow-500/10":"bg-yellow-50"   } :
+                          days <= 90  ? { label:"2–3 mo",  color:d?"text-orange-400":"text-orange-700",  bg:d?"bg-orange-500/10":"bg-orange-50"   } :
+                          days <= 120 ? { label:"3–4 mo",  color:d?"text-red-400":"text-red-700",        bg:d?"bg-red-500/10":"bg-red-50"         } :
+                          days <= 150 ? { label:"4–5 mo",  color:d?"text-rose-400":"text-rose-700",      bg:d?"bg-rose-500/10":"bg-rose-50"       } :
+                                        { label:"5–6+ mo", color:d?"text-red-300":"text-red-800",        bg:d?"bg-red-700/10":"bg-red-100"        };
+                        return (
+                          <tr key={user._id} className={`transition-colors duration-150 ${d?"hover:bg-red-500/[0.04]":"hover:bg-red-50/40"}`}>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar name={user.name}/>
+                                <div>
+                                  <p className={`text-sm font-semibold ${d?"text-slate-100":"text-slate-800"}`}>{user.name}</p>
+                                  <p className={`text-xs ${d?"text-slate-500":"text-slate-400"}`}>{user.email}</p>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className={`px-5 py-4 whitespace-nowrap text-xs ${d?"text-slate-400":"text-slate-500"}`}>
-                            {new Date(user.lastActivity).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`text-sm font-bold ${user.daysInactive>=10?d?"text-red-400":"text-red-600":d?"text-amber-400":"text-amber-600"}`}>
-                              {user.daysInactive}d
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <StatusBadge status={user.status} d={d}/>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`text-sm font-bold ${user.daysUntilDeletion<=5?d?"text-red-400":"text-red-600":d?"text-slate-300":"text-slate-600"}`}>
-                              {user.daysUntilDeletion}d
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            {user.status==="to_be_deleted" && (
-                              <button
-                                onClick={()=>handleDeleteUser(user._id)}
-                                disabled={deleting===user._id}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all disabled:opacity-50 ${
-                                  d?"bg-red-500/15 hover:bg-red-500/25 text-red-400 border-red-500/30":"bg-red-50 hover:bg-red-100 text-red-700 border-red-200"}`}>
-                                <TrashIcon cls="w-3 h-3"/>
-                                {deleting===user._id?"…":"Delete"}
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className={`px-5 py-4 whitespace-nowrap text-xs ${d?"text-slate-400":"text-slate-500"}`}>
+                              {new Date(user.lastActivity).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <span className={`text-sm font-bold ${
+                                user.daysInactive >= 175 ? d?"text-red-400":"text-red-600"
+                                : user.daysInactive >= 90 ? d?"text-orange-400":"text-orange-600"
+                                : d?"text-amber-400":"text-amber-600"
+                              }`}>{user.daysInactive}d</span>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${bucket.color} ${bucket.bg}`}>
+                                {bucket.label}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <StatusBadge status={user.status} d={d}/>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex flex-col gap-1">
+                                <span className={`text-sm font-bold ${user.daysUntilDeletion<=5?d?"text-red-400":"text-red-600":d?"text-slate-300":"text-slate-600"}`}>
+                                  {user.daysUntilDeletion}d left
+                                </span>
+                                <div className={`w-16 h-1.5 rounded-full overflow-hidden ${d?"bg-slate-700":"bg-slate-200"}`}>
+                                  <div
+                                    className={`h-full rounded-full ${user.daysUntilDeletion<=5?"bg-red-500":user.daysUntilDeletion<=30?"bg-orange-500":"bg-amber-400"}`}
+                                    style={{width:`${Math.max(0, Math.round(((180-user.daysInactive)/180)*100))}%`}}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              {user.status==="to_be_deleted" && (
+                                <button
+                                  onClick={()=>handleDeleteUser(user._id)}
+                                  disabled={deleting===user._id}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all disabled:opacity-50 ${
+                                    d?"bg-red-500/15 hover:bg-red-500/25 text-red-400 border-red-500/30":"bg-red-50 hover:bg-red-100 text-red-700 border-red-200"}`}>
+                                  <TrashIcon cls="w-3 h-3"/>
+                                  {deleting===user._id?"…":"Delete"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

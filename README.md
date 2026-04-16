@@ -11,7 +11,7 @@
 [![Redux](https://img.shields.io/badge/Redux-Toolkit-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 [![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
 
-**SkillBarter** is a full-stack MERN platform where people trade knowledge — teach what you know, learn what you want. Powered by smart matching, real-time communication, blockchain-inspired smart contracts, gamification, and a rich community ecosystem.
+**SkillBarter** is a full-stack MERN platform where people trade knowledge — teach what you know, learn what you want. SmartAlgorithm based smart matching, real-time communication, blockchain-inspired smart contracts, gamification, and a rich community ecosystem.
 
 [🚀 Quick Start](#-quick-start) · [📸 Screenshots](#-web-app-screenshots) · [🏗️ Architecture](#️-architecture--project-structure) · [📡 API Docs](#-api-endpoints) · [🤝 Contributing](#-contributing)
 
@@ -48,7 +48,7 @@
 ### Core Platform
 | Feature | Description |
 |---|---|
-| 🤖 **AI Smart Matching** | Google Gemini-powered algorithm scores compatibility across skills, availability & history |
+| 🤖 **Smart Matching** | Algorithm scores compatibility across skills, availability & history |
 | 💬 **Real-time Chat** | Socket.io messaging with typing indicators, file sharing, voice notes & read receipts |
 | 📹 **Video Meetings** | WebRTC-based meeting rooms with screen sharing, participants panel & recording |
 | 📅 **Session Scheduling** | Book, manage, and track 1-on-1 skill sessions with calendar view |
@@ -294,9 +294,8 @@
 | **Bcryptjs** | 3+ | Password hashing |
 | **Multer** | 2+ | File upload handling |
 | **Cloudinary** | 2+ | Cloud image/file storage |
-| **Nodemailer** | 7+ | Email delivery (SMTP) |
+| **Brevo (sib-api-v3-sdk)** | 7+ | Transactional email service for OTP verification and notifications |
 | **Node-cron** | 4+ | Scheduled background tasks |
-| **Redis** | 5+ | Caching layer (AI results) |
 | **Helmet** | 8+ | HTTP security headers |
 | **Express Rate Limit** | 7+ | API rate limiting |
 | **Morgan** | 1+ | HTTP request logging |
@@ -614,7 +613,7 @@ SkillBarter/
 |---|---|---|---|
 | `POST` | `/request` | Send a match request | ✅ |
 | `GET` | `/` | Get all matches | ✅ |
-| `GET` | `/smart` | Get AI smart matches | ✅ |
+| `GET` | `/smart` | Get smart matches | ✅ |
 | `PUT` | `/:id/accept` | Accept a match request | ✅ |
 | `PUT` | `/:id/decline` | Decline a match request | ✅ |
 | `DELETE` | `/:id` | Cancel a match | ✅ |
@@ -751,7 +750,7 @@ SkillBarter/
 
 ## 🗄️ Database Models
 
-The platform uses **28 Mongoose models** organized across the following domains:
+The platform uses **25 Mongoose models** organized across the following domains:
 
 ### 👤 User Domain
 | Model | Description |
@@ -759,13 +758,11 @@ The platform uses **28 Mongoose models** organized across the following domains:
 | `User` | Core user profile — name, email, avatar, bio, role, skills |
 | `Block` | User-to-user block relationships |
 | `MatchPreference` | AI matching preferences per user |
-| `Progress` | Learning progress tracking |
 
 ### 🤝 Matching Domain
 | Model | Description |
 |---|---|
 | `Match` | Match request with status (pending/accepted/declined) |
-| `MatchHistory` | Historical match metadata & compatibility scores |
 
 ### 💬 Communication Domain
 | Model | Description |
@@ -785,7 +782,6 @@ The platform uses **28 Mongoose models** organized across the following domains:
 | Model | Description |
 |---|---|
 | `Session` | 1-on-1 skill session with status lifecycle |
-| `Schedule` | Session availability & calendar slots |
 | `SkillContract` | Smart contract with milestones & signatures |
 | `Transaction` | Time credit transfers |
 | `Wallet` | User's time banking wallet |
@@ -1161,7 +1157,7 @@ The app uses **Redux Toolkit** for global state. All slices are in `client/src/r
 | `authSlice` | Logged-in user, JWT token, auth loading/error state |
 | `userSlice` | Current user profile data & update status |
 | `matchSlice` | Match requests (sent/received), active matches |
-| `smartMatchSlice` | AI match results, filters, loading states |
+| `smartMatchSlice` | match results, filters, loading states |
 | `chatSlice` | Conversations list, active conversation, messages |
 | `skillSlice` | User's skills, categories, skill CRUD status |
 | `reviewSlice` | Reviews received/given, review CRUD states |
@@ -1239,7 +1235,6 @@ VITE_SOCKET_URL=http://localhost:5000
 ### Prerequisites
 - ✅ Node.js 18+
 - ✅ MongoDB (local or Atlas)
-- ✅ Redis (optional, for AI caching)
 - ✅ npm or yarn
 
 ---
@@ -1248,8 +1243,8 @@ VITE_SOCKET_URL=http://localhost:5000
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/skillbarter.git
-cd skillbarter
+git clone https://github.com/VaibhavVataliya/SkillBarter.git
+cd SkillBarter
 ```
 
 ### Step 2 — Backend Setup

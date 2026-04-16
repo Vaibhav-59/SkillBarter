@@ -153,7 +153,12 @@ exports.takeAction = async (req, res) => {
 
     report.status = status || report.status;
     report.adminNote = adminNote || report.adminNote;
-    report.actionTakenBy = req.user._id;
+    // Only assign actionTakenBy when the ID is a real ObjectId.
+    // The master-admin bypass sets req.user._id to the string "admin-master",
+    // which is not a valid ObjectId and would cause a BSONError on save.
+    if (req.user._id && mongoose.Types.ObjectId.isValid(req.user._id)) {
+      report.actionTakenBy = req.user._id;
+    }
     report.actionTakenAt = new Date();
     await report.save();
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "../hooks/useTheme";
 import { Link } from "react-router-dom";
 
@@ -141,6 +141,127 @@ const TESTIMONIALS = [
   },
 ];
 
+const FAQS = [
+  {
+    q: "What is SkillBarter and how does it work?",
+    a: "SkillBarter is a peer-powered skill-exchange platform where you teach what you know and learn what you need — completely free. Sign up, add the skills you can teach and want to learn, and our AI instantly connects you with the ideal learning partners. You then schedule live video sessions, collaborate via chat, and grow together.",
+    emoji: "🔄",
+    cat: "General"
+  },
+  {
+    q: "Is SkillBarter completely free to use?",
+    a: "Yes! SkillBarter operates on a pure skill-exchange model — you teach one skill to gain access to learn another. There are no subscription fees, no hidden charges, and no credit card required to get started. Premium features like Smart Contracts and advanced analytics may be introduced in future versions.",
+    emoji: "💸",
+    cat: "Pricing"
+  },
+  {
+    q: "How does the AI Skill Matching work?",
+    a: "Our intelligent matching engine analyzes your offered skills, desired skills, learning goals, experience level, preferred schedule, and community ratings. It then scores and surfaces the most compatible partners using a weighted algorithm — ensuring you connect with people who complement your learning objectives perfectly.",
+    emoji: "🤖",
+    cat: "AI Matching"
+  },
+  {
+    q: "How do I get started on SkillBarter?",
+    a: "Getting started takes under 2 minutes: (1) Click 'Get Started Free' and create your account. (2) Set up your profile by adding skills you can teach and skills you want to learn. (3) Explore your AI-generated matches. (4) Send a session request or message your match directly to schedule your first skill-exchange session!",
+    emoji: "🚀",
+    cat: "Getting Started"
+  },
+  {
+    q: "What happens during a skill-exchange session?",
+    a: "Sessions are conducted via our built-in HD video meeting room with screen sharing and a collaborative whiteboard. You can record sessions for later review. A typical exchange is split — one partner teaches their skill in the first half, and the other teaches in the second. Sessions can be 1-on-1 or group-based.",
+    emoji: "🎥",
+    cat: "Sessions"
+  },
+  {
+    q: "What is the Skill Hub?",
+    a: "The Skill Hub is your all-in-one growth center. It includes: Gamification (XP, levels, badges), Challenges (skill-based competitions), Learning Paths (structured skill roadmaps), Group Sessions (join community classes), Time Banking (track your skill-exchange hours), and Skill Verification (get your skills community-verified).",
+    emoji: "🏆",
+    cat: "Features"
+  },
+  {
+    q: "What are Smart Contracts on SkillBarter?",
+    a: "Smart Contracts let you formalize your skill-exchange agreement digitally. You and your partner define goals, milestones, session frequency, and expected deliverables. Both parties sign the contract, and progress is tracked transparently. This builds accountability and ensures both learners stay committed to their goals.",
+    emoji: "📝",
+    cat: "Features"
+  },
+  {
+    q: "How is my safety and privacy protected?",
+    a: "SkillBarter takes safety seriously. Every user has a Trust Score calculated from community reports, session ratings, and verified reviews. You can report suspicious users or content instantly. Admins review all reports and can warn, suspend, or ban users. All messages are private and your personal data is never sold.",
+    emoji: "🛡️",
+    cat: "Safety"
+  },
+  {
+    q: "Can I review and rate my skill-exchange partners?",
+    a: "Absolutely. After every session you can leave a detailed star rating and written review. Reviews are publicly visible on user profiles, helping the community build genuine trust. The review system is transparent — users can see all feedback, positive or critical, with no hidden filtering.",
+    emoji: "⭐",
+    cat: "Reviews"
+  },
+  {
+    q: "What if I have more questions or need support?",
+    a: "We're here to help! Use the Contact page to send us a message directly. You can also ask questions in the Community section where experienced SkillBarter members are happy to assist. Our admin team monitors the platform 24/7 to ensure a smooth experience for everyone.",
+    emoji: "💬",
+    cat: "Support"
+  },
+];
+
+// ── FaqItem ──────────────────────────────────────────────────────
+function FaqItem({ item, open, onToggle, d, idx }) {
+  const catColors = [
+    "from-indigo-400 to-violet-500",
+    "from-emerald-400 to-teal-500",
+    "from-violet-400 to-purple-500",
+    "from-blue-400 to-indigo-500",
+    "from-amber-400 to-orange-500",
+  ];
+  const grad = catColors[idx % catColors.length];
+  return (
+    <div
+      className={`group rounded-2xl border transition-all duration-300 overflow-hidden ${
+        open
+          ? d ? "bg-[#0d1120] border-indigo-500/30 shadow-lg shadow-indigo-500/10" : "bg-white border-indigo-300 shadow-md shadow-indigo-100"
+          : d ? "bg-[#0d1120]/60 border-white/5 hover:border-white/10" : "bg-white border-slate-200/70 hover:border-slate-300 shadow-sm"
+      }`}
+    >
+      <button
+        id={`faq-btn-${idx}`}
+        onClick={onToggle}
+        className="w-full flex items-center gap-4 p-5 md:p-6 text-left cursor-pointer"
+      >
+        <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-br ${grad} shadow-sm`}>
+          {item.emoji}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className={`text-[10px] font-black uppercase tracking-widest mb-0.5 bg-gradient-to-r ${grad} bg-clip-text text-transparent`}>
+            {item.cat}
+          </div>
+          <div className={`text-sm md:text-base font-bold leading-snug ${d ? "text-slate-100" : "text-slate-800"}`}>
+            {item.q}
+          </div>
+        </div>
+        <div className={`flex-shrink-0 w-8 h-8 rounded-xl border flex items-center justify-center transition-all duration-300 ${
+          open
+            ? `bg-gradient-to-br ${grad} border-transparent text-white rotate-45`
+            : d ? "border-white/10 text-slate-400 group-hover:border-indigo-500/30" : "border-slate-200 text-slate-400 group-hover:border-indigo-300"
+        }`}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+      </button>
+      <div
+        className="overflow-hidden transition-all duration-500 ease-in-out"
+        style={{ maxHeight: open ? "400px" : "0px", opacity: open ? 1 : 0 }}
+      >
+        <div className={`px-5 md:px-6 pb-5 md:pb-6 ml-14 border-t pt-4 ${
+          d ? "border-white/5 text-slate-400" : "border-slate-100 text-slate-600"
+        } text-sm leading-relaxed`}>
+          {item.a}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── FeatureCard ──────────────────────────────────────────────────
 function FeatureCard({ feature, d }) {
   const c = COLOR_MAP[feature.color] || COLOR_MAP.indigo;
@@ -179,6 +300,49 @@ function FeatureCard({ feature, d }) {
   );
 }
 
+// ── FaqSection ──────────────────────────────────────────────────
+function FaqSection({ d }) {
+  const [openIdx, setOpenIdx] = useState(null);
+  const toggle = (i) => setOpenIdx(openIdx === i ? null : i);
+  return (
+    <section id="faq" className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-16">
+      <div className="text-center mb-12">
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest mb-4 ${
+          d ? "bg-amber-500/10 border-amber-500/25 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-600"
+        }`}>
+          ❓ FAQ
+        </div>
+        <h2 className={`text-3xl md:text-4xl font-black mb-3 ${d ? "text-white" : "text-slate-900"}`}>
+          Frequently Asked{" "}
+          <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Questions</span>
+        </h2>
+        <p className={`text-base max-w-2xl mx-auto ${d ? "text-slate-400" : "text-slate-600"}`}>
+          Everything you need to know about SkillBarter — answered clearly and honestly.
+        </p>
+      </div>
+
+      {/* Glowing orb accent */}
+      <div className={`absolute left-1/2 -translate-x-1/2 top-24 w-96 h-96 rounded-full blur-3xl pointer-events-none -z-10 ${
+        d ? "bg-amber-500/5" : "bg-amber-100/40"
+      }`} />
+
+      <div className="space-y-3">
+        {FAQS.map((item, i) => (
+          <FaqItem key={i} item={item} idx={i} open={openIdx === i} onToggle={() => toggle(i)} d={d} />
+        ))}
+      </div>
+
+      {/* Bottom CTA hint */}
+      <div className={`mt-10 text-center text-sm ${d ? "text-slate-500" : "text-slate-400"}`}>
+        Still have questions?{" "}
+        <Link to="/contact" className={`font-bold underline underline-offset-2 ${
+          d ? "text-amber-400 hover:text-amber-300" : "text-amber-600 hover:text-amber-700"
+        }`}>Contact us →</Link>
+      </div>
+    </section>
+  );
+}
+
 // ── Main HomePage ────────────────────────────────────────────────
 export default function HomePage() {
   const { theme, toggleTheme, isDarkMode: d } = useTheme();
@@ -198,7 +362,7 @@ export default function HomePage() {
       </div>
 
       {/* ── NAVBAR ────────────────────────────────────────────── */}
-      <nav className={`relative z-20 border-b backdrop-blur-xl transition-colors duration-300 ${d ? "bg-[#060912]/80 border-white/5" : "bg-white/80 border-slate-200/60"}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${d ? "bg-[#060912]/90 border-white/5" : "bg-white/90 border-slate-200/60"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -211,6 +375,7 @@ export default function HomePage() {
             {[
               { label: "Features", path: "#features" },
               { label: "How it Works", path: "/how-it-works" },
+              { label: "FAQ", path: "#faq" },
               { label: "About", path: "/about" },
               { label: "Contact", path: "/contact" }
             ].map((l) => (
@@ -247,7 +412,7 @@ export default function HomePage() {
       </nav>
 
       {/* ── HERO ──────────────────────────────────────────────── */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-16 text-center">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-36 pb-16 text-center">
         {/* Badge */}
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-widest mb-8 ${d ? "bg-indigo-500/10 border-indigo-500/25 text-indigo-300" : "bg-indigo-50 border-indigo-200 text-indigo-600"}`}>
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -412,6 +577,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── FAQ SECTION ──────────────────────────────────────── */}
+      <FaqSection d={d} />
 
       {/* ── CTA SECTION ──────────────────────────────────────── */}
       <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { validatePassword } from "../../utils/validation";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 const Spinner = () => (
   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -175,6 +176,28 @@ export default function LoginForm({ isDarkMode = true, onSwitchMode }) {
         </div>
 
         <div className="space-y-4">
+          {/* ── Google Login ── */}
+          <GoogleLoginButton
+            isDarkMode={d}
+            disabled={loading}
+            onSuccess={(data) => {
+              setUserRole(data.user?.role || "user");
+              setShowSuccess(true);
+              setTimeout(
+                () => { window.location.href = data.user?.role === "admin" ? "/admin/dashboard" : "/dashboard"; },
+                200
+              );
+            }}
+            onError={(msg) => setErrors((p) => ({ ...p, submit: msg }))}
+          />
+
+          {/* ── Divider ── */}
+          <div className="flex items-center gap-3">
+            <div className={`flex-1 h-px ${d ? "bg-white/10" : "bg-slate-200"}`} />
+            <span className={`text-xs font-medium ${d ? "text-slate-600" : "text-slate-400"}`}>or continue with email</span>
+            <div className={`flex-1 h-px ${d ? "bg-white/10" : "bg-slate-200"}`} />
+          </div>
+
           {/* Email */}
           <div>
             <label className={labelCls}>Email</label>

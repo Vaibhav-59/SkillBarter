@@ -132,7 +132,7 @@ export default function HowItWorksPage() {
         </div>
         
         <div className="mt-16 text-center">
-            <Link to="/register" className="inline-block bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold px-10 py-5 rounded-2xl text-xl hover:shadow-2xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105">
+            <Link to="/login" className="inline-block bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold px-10 py-5 rounded-2xl text-xl hover:shadow-2xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105">
               🚀 Start Your Journey Today
             </Link>
         </div>

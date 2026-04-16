@@ -376,3 +376,93 @@ exports.logout = async (req, res, next) => {
     next(err);
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Google Auth  –  POST /api/auth/google
+// ─────────────────────────────────────────────────────────────────────────────
+// Secure flow:
+//   1. Client sends ONLY { idToken } (Firebase ID token from the Google popup)
+//   2. Server verifies the idToken using Firebase Admin SDK
+//      → extracts uid, email, name, picture, emailVerified from the verified payload
+//   3. Find or create user in MongoDB by email
+//      a. Existing local account → merge Google data in (account linking)
+//      b. Existing Google account → just login
+//      c. New user → create with no password, isEmailVerified = true
+//   4. Return JWT + user object  (OTP is skipped entirely for Google users)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.googleAuth = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: "Firebase ID token is required" });
+    }
+
+    // ── Verify the ID token server-side using Firebase Admin ─────────────────
+    const { verifyGoogleIdToken } = require("../services/authApi");
+    const googleUser = await verifyGoogleIdToken(idToken);
+    // googleUser = { uid, email, name, picture, emailVerified }
+
+    if (!googleUser.emailVerified) {
+      return res.status(401).json({ message: "Google email is not verified" });
+    }
+
+    const normalizedEmail = googleUser.email.toLowerCase().trim();
+
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (user) {
+      // ── Merge / login existing user ──────────────────────────────────────
+      if (user.authProvider === "local" || !user.googleId) {
+        user.googleId = googleUser.uid;
+        user.authProvider = "google";
+        user.isEmailVerified = true;
+        // Only set profile image if the user hasn't uploaded one yet
+        if (googleUser.picture && !user.profileImage) {
+          user.profileImage = googleUser.picture;
+        }
+      }
+      user.lastLogin = new Date();
+      user.reminderSent = false;
+      user.deletionNotificationSent = false;
+      await user.save({ validateBeforeSave: false });
+    } else {
+      // ── Create new Google user ───────────────────────────────────────────
+      user = await User.create({
+        name: googleUser.name,
+        email: normalizedEmail,
+        googleId: googleUser.uid,
+        authProvider: "google",
+        isEmailVerified: true,
+        profileImage: googleUser.picture || "",
+        lastLogin: new Date(),
+      });
+    }
+
+    // ── Generate tokens ───────────────────────────────────────────────────────
+    const token = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    if (!user.refreshTokens) user.refreshTokens = [];
+    user.refreshTokens.push(refreshToken);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: "Google authentication successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage,
+        authProvider: user.authProvider,
+        isEmailVerified: user.isEmailVerified,
+      },
+      token,
+      refreshToken,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -17,8 +17,23 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      // Optional for Google-authenticated users
       minlength: 6,
+    },
+
+    // ── Google / OAuth fields ────────────────────────────────────────────────
+    googleId: {
+      type: String,
+      default: null,
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
     },
 
     bio: {
@@ -161,7 +176,8 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  // Skip hashing if password not set (Google users) or not modified
+  if (!this.password || !this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();

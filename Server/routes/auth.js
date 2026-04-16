@@ -12,6 +12,7 @@ const {
   directResetPassword,
   sendLoginOtp,
   verifyLoginOtp,
+  googleAuth,
 } = require("../controllers/authController");
 const rateLimit = require("express-rate-limit");
 const { refreshToken } = require("../controllers/authController");
@@ -125,6 +126,26 @@ router.post(
   ],
   runValidation,
   verifyLoginOtp
+);
+
+// Google Auth (Login / Register via Google OAuth)
+// Relaxed rate limit — Firebase handles its own throttling
+const googleAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many Google auth requests, please try again later." },
+});
+
+router.post(
+  "/google",
+  googleAuthLimiter,
+  [
+    body("idToken").notEmpty().withMessage("Firebase ID token is required"),
+  ],
+  runValidation,
+  googleAuth
 );
 
 // DEBUG: Check current user role

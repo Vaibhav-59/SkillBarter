@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { validatePassword as validateStrongPassword } from "../../utils/validation";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 const Spinner = () => (
   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -175,6 +176,29 @@ export default function RegisterForm({ isDarkMode = true, onSwitchMode }) {
         </div>
 
         <div className="space-y-4">
+          {/* ── Google Register/Login ── */}
+          <GoogleLoginButton
+            isDarkMode={d}
+            label="Continue with Google"
+            disabled={loading}
+            onSuccess={(data) => {
+              // Google users bypass OTP — go straight to dashboard
+              setShowSuccess(true);
+              setTimeout(
+                () => { window.location.href = data.user?.role === "admin" ? "/admin/dashboard" : "/dashboard"; },
+                600
+              );
+            }}
+            onError={(msg) => alert(msg)}
+          />
+
+          {/* ── Divider ── */}
+          <div className="flex items-center gap-3">
+            <div className={`flex-1 h-px ${d ? "bg-white/10" : "bg-slate-200"}`} />
+            <span className={`text-xs font-medium ${d ? "text-slate-600" : "text-slate-400"}`}>or register with email</span>
+            <div className={`flex-1 h-px ${d ? "bg-white/10" : "bg-slate-200"}`} />
+          </div>
+
           {/* Full Name */}
           <div>
             <label className={labelCls}>Full Name</label>

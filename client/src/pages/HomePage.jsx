@@ -343,6 +343,147 @@ function FaqSection({ d }) {
   );
 }
 
+// ── Nav Links Data ────────────────────────────────────────────────
+const NAV_LINKS = [
+  { label: "Features",     path: "#features",    emoji: "⚡" },
+  { label: "How it Works", path: "#how-it-works", emoji: "🔄" },
+  { label: "FAQ",          path: "#faq",          emoji: "❓" },
+  { label: "About",        path: "/about",        emoji: "💡" },
+  { label: "Contact",      path: "/contact",      emoji: "✉️" },
+];
+
+// ── MobileNav ─────────────────────────────────────────────────────
+function MobileNav({ d, toggleTheme }) {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  return (
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${d ? "bg-[#060912]/90 border-white/5" : "bg-white/90 border-slate-200/60"}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+
+          {/* Logo */}
+          <Link to="/" onClick={close} className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-black text-lg">S</div>
+            <span className="text-xl font-black bg-gradient-to-r from-indigo-500 to-violet-600 bg-clip-text text-transparent">SkillBarter</span>
+          </Link>
+
+          {/* Desktop nav links */}
+          <div className={`hidden md:flex items-center gap-1 rounded-xl p-1.5 ${d ? "bg-white/[0.03] border border-white/5" : "bg-slate-100/80 border border-slate-200/50"}`}>
+            {NAV_LINKS.map((l) =>
+              l.path.startsWith("#") ? (
+                <a key={l.label} href={l.path}
+                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${d ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-slate-600 hover:text-slate-900 hover:bg-white"}`}>
+                  {l.label}
+                </a>
+              ) : (
+                <Link key={l.label} to={l.path}
+                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${d ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-slate-600 hover:text-slate-900 hover:bg-white"}`}>
+                  {l.label}
+                </Link>
+              )
+            )}
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {/* Theme toggle */}
+            <button onClick={toggleTheme}
+              className={`p-2 rounded-xl border transition-all hover:scale-105 ${d ? "bg-white/5 border-white/10 text-yellow-400 hover:border-yellow-500/30" : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300"}`}>
+              {d ? <SunIcon /> : <MoonIcon />}
+            </button>
+
+            {/* Desktop: Sign In */}
+            <Link to="/login" className={`hidden md:block text-sm font-semibold px-4 py-2 rounded-xl transition-colors ${d ? "text-slate-300 hover:text-white" : "text-slate-700 hover:text-indigo-600"}`}>
+              Sign In
+            </Link>
+
+            {/* Desktop: Get Started */}
+            <Link to="/login"
+              className="hidden md:block relative bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-indigo-500/40 transition-all hover:scale-105 overflow-hidden group">
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <span className="relative">Get Started</span>
+            </Link>
+
+            {/* Mobile: Hamburger */}
+            <button
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle navigation menu"
+              className={`md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-xl border transition-all ${d ? "bg-white/5 border-white/10 hover:border-indigo-500/40" : "bg-white border-slate-200 hover:border-indigo-300"}`}
+            >
+              <span className={`block w-5 h-0.5 transition-all duration-300 ${d ? "bg-slate-300" : "bg-slate-700"} ${open ? "rotate-45 translate-y-[3px]" : ""}`}/>
+              <span className={`block w-5 h-0.5 my-1 transition-all duration-300 ${d ? "bg-slate-300" : "bg-slate-700"} ${open ? "opacity-0 scale-x-0" : ""}`}/>
+              <span className={`block w-5 h-0.5 transition-all duration-300 ${d ? "bg-slate-300" : "bg-slate-700"} ${open ? "-rotate-45 -translate-y-[7px]" : ""}`}/>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile drawer */}
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <div className={`border-t px-4 py-4 space-y-1 ${d ? "border-white/5 bg-[#060912]/98" : "border-slate-100 bg-white/98"}`}>
+            {/* Nav links */}
+            {NAV_LINKS.map((l) =>
+              l.path.startsWith("#") ? (
+                <a
+                  key={l.label}
+                  href={l.path}
+                  onClick={close}
+                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${d ? "text-slate-300 hover:text-white hover:bg-indigo-500/10" : "text-slate-700 hover:text-indigo-600 hover:bg-indigo-50"}`}
+                >
+                  <span className="text-base">{l.emoji}</span>
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.label}
+                  to={l.path}
+                  onClick={close}
+                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${d ? "text-slate-300 hover:text-white hover:bg-indigo-500/10" : "text-slate-700 hover:text-indigo-600 hover:bg-indigo-50"}`}
+                >
+                  <span className="text-base">{l.emoji}</span>
+                  {l.label}
+                </Link>
+              )
+            )}
+
+            {/* Divider */}
+            <div className={`my-2 h-px ${d ? "bg-white/5" : "bg-slate-100"}`}/>
+
+            {/* Mobile CTA buttons */}
+            <div className="flex flex-col gap-2 pt-1">
+              <Link
+                to="/login"
+                onClick={close}
+                className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-bold border transition-all ${d ? "border-white/10 text-slate-200 hover:bg-white/5" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+              >
+                👋 Sign In
+              </Link>
+              <Link
+                to="/login"
+                onClick={close}
+                className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-bold px-4 py-3 rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
+              >
+                🚀 Get Started Free
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Backdrop overlay when mobile menu open */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
+    </>
+  );
+}
+
 // ── Main HomePage ────────────────────────────────────────────────
 export default function HomePage() {
   const { theme, toggleTheme, isDarkMode: d } = useTheme();
@@ -362,54 +503,8 @@ export default function HomePage() {
       </div>
 
       {/* ── NAVBAR ────────────────────────────────────────────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${d ? "bg-[#060912]/90 border-white/5" : "bg-white/90 border-slate-200/60"}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-black text-lg">S</div>
-            <span className="text-xl font-black bg-gradient-to-r from-indigo-500 to-violet-600 bg-clip-text text-transparent">SkillBarter</span>
-          </div>
+      <MobileNav d={d} toggleTheme={toggleTheme} />
 
-          {/* Nav links */}
-          <div className={`hidden md:flex items-center gap-1 rounded-xl p-1.5 ${d ? "bg-white/[0.03] border border-white/5" : "bg-slate-100/80 border border-slate-200/50"}`}>
-            {[
-              { label: "Features", path: "#features" },
-              { label: "How it Works", path: "/how-it-works" },
-              { label: "FAQ", path: "#faq" },
-              { label: "About", path: "/about" },
-              { label: "Contact", path: "/contact" }
-            ].map((l) => (
-              l.path.startsWith("#") ? (
-                <a key={l.label} href={l.path}
-                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${d ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-slate-600 hover:text-slate-900 hover:bg-white"}`}>
-                  {l.label}
-                </a>
-              ) : (
-                <Link key={l.label} to={l.path}
-                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${d ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-slate-600 hover:text-slate-900 hover:bg-white"}`}>
-                  {l.label}
-                </Link>
-              )
-            ))}
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-3">
-            <button onClick={toggleTheme}
-              className={`p-2 rounded-xl border transition-all hover:scale-105 ${d ? "bg-white/5 border-white/10 text-yellow-400 hover:border-yellow-500/30" : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300"}`}>
-              {d ? <SunIcon /> : <MoonIcon />}
-            </button>
-            <Link to="/login" className={`hidden md:block text-sm font-semibold px-4 py-2 rounded-xl transition-colors ${d ? "text-slate-300 hover:text-white" : "text-slate-700 hover:text-indigo-600"}`}>
-              Sign In
-            </Link>
-            <Link to="/login"
-              className="relative bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-indigo-500/40 transition-all hover:scale-105 overflow-hidden group">
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-              <span className="relative">Get Started</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
 
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-36 pb-16 text-center">

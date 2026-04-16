@@ -58,13 +58,14 @@ export default function MatchesPage() {
 
   const applyFilter = (list, filter, uid, query) => {
     let out = list;
-    if (filter === "current")          out = list.filter(m => m.status === "accepted");
-    else if (filter === "pending-sent") out = list.filter(m => m.status === "pending" && m.requester._id === uid);
-    else if (filter === "pending-received") out = list.filter(m => m.status === "pending" && m.receiver._id === uid);
-    else if (filter === "rejected")    out = list.filter(m => m.status === "rejected");
+    if (filter === "current")              out = list.filter(m => m.status === "accepted");
+    else if (filter === "pending-sent")    out = list.filter(m => m.status === "pending" && m.requester?._id === uid);
+    else if (filter === "pending-received") out = list.filter(m => m.status === "pending" && m.receiver?._id === uid);
+    else if (filter === "rejected")        out = list.filter(m => m.status === "rejected");
     if (query.trim()) {
       const q = query.toLowerCase();
       out = out.filter(m => {
+        if (!m.requester || !m.receiver) return false;
         const other = m.requester._id === uid ? m.receiver : m.requester;
         return other.name?.toLowerCase().includes(q) ||
           other.skillsToTeach?.some(s => s.toLowerCase().includes(q)) ||
@@ -111,8 +112,8 @@ export default function MatchesPage() {
   const filterOptions = [
     { key: "all",              label: "All",      count: matches.length },
     { key: "current",          label: "Active",   count: matches.filter(m => m.status === "accepted").length },
-    { key: "pending-sent",     label: "Sent",     count: matches.filter(m => m.status === "pending" && m.requester._id === userId).length },
-    { key: "pending-received", label: "Received", count: matches.filter(m => m.status === "pending" && m.receiver._id === userId).length },
+    { key: "pending-sent",     label: "Sent",     count: matches.filter(m => m.status === "pending" && m.requester?._id === userId).length },
+    { key: "pending-received", label: "Received", count: matches.filter(m => m.status === "pending" && m.receiver?._id === userId).length },
     { key: "rejected",         label: "Declined", count: matches.filter(m => m.status === "rejected").length },
   ];
 

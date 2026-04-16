@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import VerificationBadge from "./verification/VerificationBadge";
+import { useSocket } from "../contexts/SocketContext";
 
 const StarRating = ({ rating }) => {
   return (
@@ -22,6 +23,7 @@ const StarRating = ({ rating }) => {
 export default function ExpertListItem({ expert, skillName }) {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const { isUserOnline } = useSocket();
 
   const handleClick = () => {
     navigate(`/skills/explore/${encodeURIComponent(skillName)}/expert/${expert._id}`);
@@ -61,8 +63,10 @@ export default function ExpertListItem({ expert, skillName }) {
             </div>
           )}
         </div>
-        {/* Online indicator */}
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-gray-900 animate-pulse shadow-lg shadow-emerald-400/30" />
+        {/* Online indicator — only shown when expert is connected */}
+        {isUserOnline(expert._id) && (
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-gray-900 animate-pulse shadow-lg shadow-emerald-400/30" />
+        )}
       </div>
 
       {/* Expert Info */}

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { useTheme } from "../hooks/useTheme";
 import VerificationBadge from "../components/verification/VerificationBadge";
+import { useSocket } from "../contexts/SocketContext";
 
 /* ─── tiny reusable section card ─────────────────────────── */
 function SectionCard({ children, className = "", isDarkMode }) {
@@ -54,6 +55,7 @@ export default function UserDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const { isUserOnline } = useSocket();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -329,11 +331,14 @@ export default function UserDetailPage() {
                     <span>{initials}</span>
                   )}
                 </div>
-                {/* Online dot */}
-                <span
-                  className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-green-400 rounded-full shadow-md"
-                  style={{ border: `2px solid ${isDarkMode ? "#0a0f1e" : "#ffffff"}` }}
-                />
+                {/* Online dot — only visible when user is connected */}
+                {isUserOnline(user._id) && (
+                  <span
+                    className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-green-400 rounded-full shadow-md"
+                    style={{ border: `2px solid ${isDarkMode ? "#0a0f1e" : "#ffffff"}` }}
+                    title="Online"
+                  />
+                )}
               </div>
 
               {/* Spacer that pushes layout down alongside avatar */}

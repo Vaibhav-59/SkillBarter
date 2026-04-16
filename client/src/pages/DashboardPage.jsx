@@ -6,7 +6,7 @@ import { useSocket } from "../contexts/SocketContext";
 
 export default function DashboardPage() {
   const { isDarkMode, textClass, borderClass } = useTheme();
-  const { socket } = useSocket();
+  const { socket, isUserOnline } = useSocket();
   const [allUsers, setAllUsers] = useState([]);
   const [displayedUsers, setDisplayedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -579,8 +579,13 @@ export default function DashboardPage() {
                             <span className="tracking-wide">{initials}</span>
                           )}
                         </div>
-                        {/* Online dot */}
-                        <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 ${t.onlineIndicator} shadow-sm`} />
+                        {/* Online dot — only visible when user is connected */}
+                        {isUserOnline(user._id) && (
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 ${t.onlineIndicator} shadow-sm`}
+                            title="Online"
+                          />
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">

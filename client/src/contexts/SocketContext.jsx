@@ -30,6 +30,11 @@ export const SocketProvider = ({ children }) => {
         console.error("🔴 Socket connection error:", error.message);
       });
 
+      // Seed the set with everyone already online when we first connect
+      socket.on("onlineUsers", (userIds) => {
+        setOnlineUsers(new Set(userIds));
+      });
+
       // Listen for user online/offline events
       socket.on("userOnline", (userId) => {
         setOnlineUsers((prev) => new Set([...prev, userId]));

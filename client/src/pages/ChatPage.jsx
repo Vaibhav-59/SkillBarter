@@ -71,6 +71,7 @@ export default function ChatPage() {
   const { isDarkMode } = useTheme();
   const {
     isConnected,
+    isUserOnline,
     joinConversation,
     leaveConversation,
     onMessageReceived,
@@ -576,7 +577,7 @@ export default function ChatPage() {
                           )}
                         </div>
                         <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 ${isDarkMode ? "border-slate-900" : "border-white"
-                          } ${isConnected ? "bg-emerald-400" : "bg-gray-400"}`} />
+                          } ${isUserOnline(other?._id) ? "bg-emerald-400" : "bg-gray-400"}`} />
                       </div>
 
                       {/* Info */}
@@ -645,16 +646,16 @@ export default function ChatPage() {
                       )}
                     </div>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 ${isDarkMode ? "border-slate-900" : "border-white"
-                      } ${isConnected ? "bg-emerald-400" : "bg-gray-400"} animate-pulse`} />
+                      } ${isUserOnline(selectedConversation.participants.find(p => p._id !== userId)?._id) ? "bg-emerald-400" : "bg-gray-400"} animate-pulse`} />
                   </div>
                   <div>
                     <h3 className={`text-sm sm:text-lg font-black ${textMain}`}>
                       {selectedConversation.participants.find(p => p._id !== userId)?.name || "Unknown User"}
                     </h3>
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-gray-400"}`} />
-                      <p className={`text-xs font-semibold ${isConnected ? isDarkMode ? "text-emerald-400" : "text-emerald-600" : textSub}`}>
-                        {isConnected ? "Active now" : "Offline"}
+                      <div className={`w-1.5 h-1.5 rounded-full ${isUserOnline(selectedConversation.participants.find(p => p._id !== userId)?._id) ? "bg-emerald-400" : "bg-gray-400"}`} />
+                      <p className={`text-xs font-semibold ${isUserOnline(selectedConversation.participants.find(p => p._id !== userId)?._id) ? isDarkMode ? "text-emerald-400" : "text-emerald-600" : textSub}`}>
+                        {isUserOnline(selectedConversation.participants.find(p => p._id !== userId)?._id) ? "Active now" : "Offline"}
                       </p>
                     </div>
                   </div>

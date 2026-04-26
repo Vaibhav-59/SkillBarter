@@ -3,6 +3,7 @@ const Session = require("../models/Session");
 const { sendSessionReminder } = require("../services/reminderService");
 const { sendContractReminders } = require("../services/contractReminderService");
 const { rotateDailyChallenge } = require("../controllers/challengeController");
+const { checkInactiveUsers } = require("./inactiveUserHandler");
 const https = require("https");
 
 const startCronJobs = (app) => {
@@ -73,6 +74,13 @@ const startCronJobs = (app) => {
   cron.schedule("0 0 * * *", async () => {
     console.log("🔄 [Cron] Rotating daily challenge...");
     await rotateDailyChallenge();
+  });
+
+  // ── Inactive User Check: runs every day at 01:00 UTC ──
+  // Sends reminder email at day 175 of inactivity, deletes account at day 180.
+  cron.schedule("0 1 * * *", async () => {
+    console.log("🔍 [Cron] Checking for inactive users...");
+    await checkInactiveUsers();
   });
 
   // Also rotate on startup so the daily challenge is always valid

@@ -22,8 +22,10 @@ async function checkInactiveUsers() {
         (today - lastActivityDate) / (1000 * 60 * 60 * 24)
       );
 
+      // Day 180+: delete the account (send deletion email only once)
       if (daysSinceActivity >= INACTIVE_DELETE_DAY) {
         await deleteInactiveUser(user);
+      // Day 175–179: send reminder email once, only if not already sent
       } else if (daysSinceActivity >= INACTIVE_REMINDER_DAY && !user.reminderSent) {
         await sendReminderEmail(user, daysSinceActivity);
       }
@@ -142,7 +144,13 @@ SkillBarter Team`;
 
 async function deleteInactiveUser(user) {
   try {
-    await sendDeletionNotificationEmail(user);
+    // Send deletion notification email only once (at exactly 180 days)
+    if (!user.deletionNotificationSent) {
+      await sendDeletionNotificationEmail(user);
+      // Mark it so we don't double-send if anything retries before deletion completes
+      user.deletionNotificationSent = true;
+      await user.save({ validateBeforeSave: false });
+    }
 
     await Promise.all([
       Skill.deleteMany({ user: user._id }),

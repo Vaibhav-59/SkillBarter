@@ -9,7 +9,6 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const socketController = require("./sockets/socketController");
 const errorHandler = require("./middleware/error");
-const { checkInactiveUsers } = require("./utils/inactiveUserHandler");
 const startCronJobs = require("./utils/cronScheduler");
 
 dotenv.config();
@@ -120,21 +119,8 @@ server.listen(PORT, () => {
   );
   console.log(`📱 Socket.IO server ready for connections`);
   
-  // Start cron jobs
+  // Start cron jobs (includes daily inactive user check at midnight)
   startCronJobs(app);
-  
-  // Run inactive user check every day at midnight
-  setInterval(() => {
-    const now = new Date();
-    if (now.getHours() === 0 && now.getMinutes() === 0) {
-      checkInactiveUsers();
-    }
-  }, 60000);
-  
-  // Also run once on startup
-  setTimeout(() => {
-    checkInactiveUsers();
-  }, 5000);
 });
 
 // Graceful shutdown

@@ -415,11 +415,12 @@ exports.getInactiveUsers = async (req, res, next) => {
         users: inactiveUsers,
         summary: {
           totalInactive: inactiveUsers.length,
-          // Users within 5 days of the 6-month deletion threshold
+          earlyWarning: inactiveUsers.filter(u => u.daysInactive >= 10).length,
+          midWarning: inactiveUsers.filter(u => u.daysInactive >= 15).length,
           atRisk: inactiveUsers.filter(u => u.daysUntilDeletion <= 5 && u.daysUntilDeletion > 0).length,
           toBeDeleted: inactiveUsers.filter(u => u.status === "to_be_deleted").length,
-          reminderDay: INACTIVE_REMINDER_DAY, // Day 175
-          deleteDay: INACTIVE_DELETE_DAY,      // Day 180 (6 months)
+          reminderDay: INACTIVE_REMINDER_DAY,
+          deleteDay: INACTIVE_DELETE_DAY,
           policyDescription: "Accounts inactive for 6 months (180 days) are automatically deleted. A reminder is sent 5 days before deletion (day 175)."
         }
       }

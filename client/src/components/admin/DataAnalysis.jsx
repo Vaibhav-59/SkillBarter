@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchInactiveUsersAsync,
@@ -477,12 +477,14 @@ export default function DataAnalysis() {
         {/* ── INACTIVE USERS TAB ── */}
         {activeTab==="inactive" && (
           <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Summary Cards — 6 milestones */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               <StatCard icon={WarnIcon}  label="Total Inactive"  value={inactiveUsersSummary.totalInactive||0}  subtitle="Not logged in recently"    accent="amber"  d={d}/>
+              <StatCard icon={TrendIcon} label="10-Day Warning"  value={inactiveUsersSummary.earlyWarning||0}   subtitle="Inactive 10+ days"          accent="amber"  d={d}/>
+              <StatCard icon={TrendIcon} label="15-Day Warning"  value={inactiveUsersSummary.midWarning||0}     subtitle="Inactive 15+ days"          accent="indigo" d={d}/>
               <StatCard icon={AlertIcon} label="At Risk"         value={inactiveUsersSummary.atRisk||0}         subtitle="Within 5 days of deletion" accent="red"    d={d}/>
-              <StatCard icon={TrashIcon} label="To Be Deleted"   value={inactiveUsersSummary.toBeDeleted||0}    subtitle="180 days (6mo) inactive"   accent="red"    d={d}/>
-              <StatCard icon={MailIcon}  label="Reminder Sent"   value={inactiveUsersSummary.reminderDay||175}  subtitle="Day reminder email sent"    accent="blue"   d={d}/>
+              <StatCard icon={TrashIcon} label="To Be Deleted"   value={inactiveUsersSummary.toBeDeleted||0}    subtitle="180 days (6 mo) inactive"   accent="red"    d={d}/>
+              <StatCard icon={MailIcon}  label="Reminder Day"    value={`Day ${inactiveUsersSummary.reminderDay||175}`} subtitle="Email alert sent"   accent="blue"   d={d}/>
             </div>
 
             {/* ── 6-Month Inactivity Distribution Chart ── */}
@@ -573,11 +575,11 @@ export default function DataAnalysis() {
                           </div>
                           <div className="flex justify-between mt-2">
                             {[
-                              { label:"Day 0",   sub:"Last login",        color:d?"text-emerald-400":"text-emerald-600" },
-                              { label:"30d",     sub:"1 month",           color:d?"text-yellow-400":"text-yellow-600"   },
-                              { label:"90d",     sub:"3 months",          color:d?"text-orange-400":"text-orange-600"   },
-                              { label:"Day 175", sub:"⚠ Reminder email",  color:d?"text-amber-300":"text-amber-700"    },
-                              { label:"Day 180", sub:"🗑 Auto-deleted",    color:d?"text-red-400":"text-red-600"        },
+                              { label:"Day 0",   sub:"Last login",          color:d?"text-emerald-400":"text-emerald-600" },
+                              { label:"Day 10",  sub:"Early warning (10d)", color:d?"text-yellow-400":"text-yellow-600"   },
+                              { label:"Day 15",  sub:"Mid warning (15d)",   color:d?"text-orange-400":"text-orange-600"   },
+                              { label:"Day 175", sub:"Reminder email sent", color:d?"text-amber-300":"text-amber-700"     },
+                              { label:"Day 180", sub:"Auto-deleted (6 mo)", color:d?"text-red-400":"text-red-600"        },
                             ].map((m, i) => (
                               <div key={i} className="text-center">
                                 <p className={`text-[10px] font-black ${m.color}`}>{m.label}</p>

@@ -47,8 +47,10 @@ const initialState = {
     totalInactive: 0,
     atRisk: 0,
     toBeDeleted: 0,
-    reminderDay: 10,
-    deleteDay: 15,
+    earlyWarning: 0,   // Users inactive 10+ days
+    midWarning: 0,     // Users inactive 15+ days
+    reminderDay: 175,  // Day reminder email is sent (day 175)
+    deleteDay: 180,    // Day account is deleted (6 months)
   },
 
   // Loading states
